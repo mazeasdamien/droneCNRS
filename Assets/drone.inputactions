@@ -1,0 +1,137 @@
+{
+    "name": "drone",
+    "maps": [
+        {
+            "name": "flight",
+            "id": "b7b88562-b9c5-4e9d-a87b-03f4c1a24548",
+            "actions": [
+                {
+                    "name": "leftstick",
+                    "type": "Value",
+                    "id": "ac9949dd-40e2-4990-8e5f-7ceccdcfe6a2",
+                    "expectedControlType": "Stick",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                },
+                {
+                    "name": "vibrationtest",
+                    "type": "Button",
+                    "id": "41e895a1-63ff-4b5d-a1e2-713471d533a8",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "rightstick",
+                    "type": "Value",
+                    "id": "6c9273bc-36fc-4846-b2db-b178888b3fb6",
+                    "expectedControlType": "Stick",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                },
+                {
+                    "name": "cameraup",
+                    "type": "Button",
+                    "id": "89224f07-34d4-4f13-a104-1cd6e2562870",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "cameradown",
+                    "type": "Button",
+                    "id": "e3975e71-5a9f-441a-9d83-f324edf95881",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "f46056c1-c012-49e6-a49c-610e6bf03184",
+                    "path": "<Gamepad>/leftStick",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "controller",
+                    "action": "leftstick",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "47508158-9536-4fc6-b87a-362646503f11",
+                    "path": "<Gamepad>/buttonSouth",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "vibrationtest",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "a468cd80-2249-4164-90bf-f7b3d3639296",
+                    "path": "<Gamepad>/rightStick",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "controller",
+                    "action": "rightstick",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "07fd498f-f440-42c2-8c07-62d7258201ce",
+                    "path": "<Gamepad>/dpad/up",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "cameraup",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "34848b0e-138c-4701-b50e-5d9b9da1b710",
+                    "path": "<Gamepad>/dpad/down",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "cameradown",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        }
+    ],
+    "controlSchemes": [
+        {
+            "name": "GameController",
+            "bindingGroup": "GameController",
+            "devices": [
+                {
+                    "devicePath": "<DualShockGamepad>",
+                    "isOptional": false,
+                    "isOR": false
+                }
+            ]
+        },
+        {
+            "name": "controller",
+            "bindingGroup": "controller",
+            "devices": [
+                {
+                    "devicePath": "<Gamepad>",
+                    "isOptional": false,
+                    "isOR": false
+                }
+            ]
+        }
+    ]
+}
