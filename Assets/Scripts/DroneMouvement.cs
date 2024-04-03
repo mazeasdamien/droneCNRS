@@ -34,7 +34,7 @@ public class DroneMovement : MonoBehaviour
         // Camera rotation logic, inverted up and down
         float dpadVertical = dpadup.action.ReadValue<float>() - dpaddown.action.ReadValue<float>();
         float cameraRotationX = cameraRotationSpeed * Time.deltaTime * dpadVertical;
-        float newRotationX = Mathf.Clamp(camera.localEulerAngles.x - cameraRotationX, 0, 70); // Invert direction here
+        float newRotationX = Mathf.Clamp(camera.localEulerAngles.x - cameraRotationX, 0, 90); // Invert direction here
         camera.localEulerAngles = new Vector3(newRotationX, camera.localEulerAngles.y, camera.localEulerAngles.z);
     }
 
