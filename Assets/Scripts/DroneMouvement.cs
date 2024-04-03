@@ -16,7 +16,7 @@ public class DroneMovement : MonoBehaviour
     public InputActionReference dpadup;
     public InputActionReference dpaddown;
 
-    public Transform camera;
+    public Transform cam;
 
     private float _verticalMovement; // For vertical movement
     private Vector2 _rightStickInput; // For local forward/backward and left/right movement
@@ -34,8 +34,8 @@ public class DroneMovement : MonoBehaviour
         // Camera rotation logic, inverted up and down
         float dpadVertical = dpadup.action.ReadValue<float>() - dpaddown.action.ReadValue<float>();
         float cameraRotationX = cameraRotationSpeed * Time.deltaTime * dpadVertical;
-        float newRotationX = Mathf.Clamp(camera.localEulerAngles.x - cameraRotationX, 0, 90); // Invert direction here
-        camera.localEulerAngles = new Vector3(newRotationX, camera.localEulerAngles.y, camera.localEulerAngles.z);
+        float newRotationX = Mathf.Clamp(cam.localEulerAngles.x - cameraRotationX, 0, 90); // Invert direction here
+        cam.localEulerAngles = new Vector3(newRotationX, cam.localEulerAngles.y, cam.localEulerAngles.z);
     }
 
     private void FixedUpdate()
