@@ -51,20 +51,22 @@ public class DroneControl : MonoBehaviour
     {
         HandleInput();
 
-        bool wasMoving = isDroneMoving;
         isDroneMoving = body.velocity.magnitude > movementThreshold;
 
-        // Update target position to current position when starting to move
-        if (!wasMoving && isDroneMoving)
+        // Check if the drone is moving to update its target position and potentially record its flight path
+        if (isDroneMoving)
         {
-            targetPosition = transform.position;
+            targetPosition = transform.position; // Update target position continuously while moving
+
+            // If the drone has moved a significant distance since the last record, update its recorded position and rotation
             if (Vector3.Distance(transform.position, lastRecordedPosition) > distanceThreshold)
             {
                 RecordPositionAndRotation();
-                lastRecordedPosition = transform.position;
+                lastRecordedPosition = transform.position; // Update the last recorded position
             }
         }
 
+        // Logic for handling noise and stationary behavior remains unchanged
         if (!isDroneMoving && Time.time >= nextNoiseTime)
         {
             UpdateTargetPositionWithNoise();
@@ -73,11 +75,10 @@ public class DroneControl : MonoBehaviour
 
         if (!isDroneMoving)
         {
-            // Smoothly adjust position to add realism when drone is stationary
             transform.position = Vector3.SmoothDamp(transform.position, targetPosition, ref velocity, smoothTime);
         }
 
-        AdjustRotation(); // Keep Y-axis up
+        AdjustRotation();
     }
 
     private void FixedUpdate()
@@ -88,7 +89,7 @@ public class DroneControl : MonoBehaviour
 
     private void RecordPositionAndRotation()
     {
-        Debug.Log($"Recording Position: {transform.position}, Rotation: {transform.rotation}");
+        //Debug.Log($"Recording Position: {transform.position}, Rotation: {transform.rotation}");
 
         positionHistory.Enqueue(transform.position);
         rotationHistory.Enqueue(transform.rotation);
