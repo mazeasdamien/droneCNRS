@@ -93884,8 +93884,8 @@ GameObject:
   m_Component:
   - component: {fileID: 24043399951581938}
   - component: {fileID: 6290701928507356577}
+  - component: {fileID: 6290701928507356578}
   - component: {fileID: 5913157982591572632}
-  - component: {fileID: 6290701928507356575}
   - component: {fileID: 2324191593081938289}
   m_Layer: 6
   m_Name: Drone_explorer
@@ -95217,28 +95217,6 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 9064815964342265381}
   m_Mesh: {fileID: 6647439787841715182, guid: 64f756a32f1a78f4db380dc9c458e7f2, type: 3}
---- !u!114 &6290701928507356575
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6140443759534957799}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 59795df88378a7245929c62509380804, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  body: {fileID: 5913157982591572632}
-  flightSpeed: 100
-  verticalSpeed: 50
-  rotationSpeed: 50
-  cameraRotationSpeed: 50
-  rightstick: {fileID: 6263219536241151583, guid: c6ad7b0ccda91b34ab9981689ace9aeb, type: 3}
-  leftstick: {fileID: 7876730785937784829, guid: c6ad7b0ccda91b34ab9981689ace9aeb, type: 3}
-  dpadup: {fileID: 7722564809163141782, guid: c6ad7b0ccda91b34ab9981689ace9aeb, type: 3}
-  dpaddown: {fileID: -5019541649977915787, guid: c6ad7b0ccda91b34ab9981689ace9aeb, type: 3}
-  camera: {fileID: 0}
 --- !u!114 &6290701928507356577
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -95251,6 +95229,31 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4b76c69c3e796874a8f9fcd14ce1ef12, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &6290701928507356578
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6140443759534957799}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c97d2b8fcfa75a44c884752654b7115d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  body: {fileID: 5913157982591572632}
+  flightSpeed: 100
+  verticalSpeed: 50
+  rotationSpeed: 50
+  cameraRotationSpeed: 50
+  rightstick: {fileID: 6263219536241151583, guid: c6ad7b0ccda91b34ab9981689ace9aeb, type: 3}
+  leftstick: {fileID: 7876730785937784829, guid: c6ad7b0ccda91b34ab9981689ace9aeb, type: 3}
+  dpadup: {fileID: 7722564809163141782, guid: c6ad7b0ccda91b34ab9981689ace9aeb, type: 3}
+  dpaddown: {fileID: -5019541649977915787, guid: c6ad7b0ccda91b34ab9981689ace9aeb, type: 3}
+  noiseStrength: 0.07
+  noiseFrequencyRange: {x: 0.1, y: 0.6}
+  smoothTime: 0.7
+  cam: {fileID: 6616499680802704596}
 --- !u!33 &6292319427978410596
 MeshFilter:
   m_ObjectHideFlags: 0

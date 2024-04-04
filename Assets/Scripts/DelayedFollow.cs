@@ -12,6 +12,7 @@ public class DelayedFollow : MonoBehaviour
     public float ascendSpeed = 1.0f; // Speed at which the drone ascends to avoid obstacles
 
     private Queue<(Vector3 position, Quaternion rotation, float time)> history = new Queue<(Vector3, Quaternion, float)>();
+    private bool isAvoidingObstacle = false; // Track whether the drone is in avoidance mode
 
     void Update()
     {
@@ -27,9 +28,31 @@ public class DelayedFollow : MonoBehaviour
         // If there are records in the history, move and rotate towards the oldest record (from ~1 second ago)
         if (history.Count > 0)
         {
-            var (position, rotation, _) = history.Peek();
-            transform.position = Vector3.Lerp(transform.position, position, followSpeed * Time.deltaTime);
-            transform.rotation = Quaternion.Lerp(transform.rotation, rotation, rotationSpeed * Time.deltaTime);
+            var (targetPosition, targetRotation, _) = history.Peek();
+
+            // When avoiding obstacles, ignore the Y-axis position from the target
+            if (isAvoidingObstacle)
+            {
+                // Keep the current Y position
+                float currentY = transform.position.y;
+                // Lerp only X and Z position
+                Vector3 positionXZ = new Vector3(targetPosition.x, currentY, targetPosition.z);
+                transform.position = Vector3.Lerp(transform.position, positionXZ, followSpeed * Time.deltaTime);
+            }
+            else
+            {
+                // Follow target position including Y-axis
+                transform.position = Vector3.Lerp(transform.position, targetPosition, followSpeed * Time.deltaTime);
+            }
+
+            transform.rotation = Quaternion.Lerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
         }
+
+        CheckForObstaclesAndAdjustHeight();
+    }
+
+    void CheckForObstaclesAndAdjustHeight()
+    {
+        // Remain unchanged
     }
 }
