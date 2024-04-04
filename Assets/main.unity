@@ -8215,35 +8215,14 @@ GameObject:
   - component: {fileID: 537582154}
   - component: {fileID: 537582153}
   - component: {fileID: 537582151}
-  - component: {fileID: 537582150}
+  - component: {fileID: 537582155}
   m_Layer: 0
   m_Name: Drone_master
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
---- !u!65 &537582150
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 537582149}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 0.9788277, y: 0.19240737, z: 0.9654815}
-  m_Center: {x: 0.00095877744, y: 0.0034016368, z: -0.005781487}
+  m_IsActive: 1
 --- !u!54 &537582151
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -8296,6 +8275,25 @@ Transform:
   - {fileID: 529341969}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: -0.84, y: 89.232, z: 0.062}
+--- !u!114 &537582155
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 537582149}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f9379b51d6d416a46a09a547f3144043, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  targetDrone: {fileID: 24043399951581938}
+  delay: 1
+  followSpeed: 2
+  rotationSpeed: 0.5
+  verticalOffset: 5
+  raycastDistance: 2
+  ascendSpeed: 1
 --- !u!1 &551056301
 GameObject:
   m_ObjectHideFlags: 0
@@ -34410,7 +34408,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   masterDrone: {fileID: 537582149}
   targetCamera: {fileID: 1913337675559159978}
-  currentStrategy: 1
+  currentStrategy: 2
   strategy2Width: 1
 --- !u!1 &2105584884
 GameObject:
@@ -51262,9 +51260,9 @@ Camera:
   m_NormalizedViewPortRect:
     serializedVersion: 2
     x: 0
-    y: 0
+    y: 0.5
     width: 1
-    height: 1
+    height: 0.5
   near clip plane: 0.01
   far clip plane: 1000
   field of view: 82
