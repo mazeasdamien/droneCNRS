@@ -8294,6 +8294,9 @@ MonoBehaviour:
   verticalOffset: 5
   raycastDistance: 2
   ascendSpeed: 1
+  noiseStrength: 0.1
+  noiseFrequencyRange: {x: 1, y: 3}
+  smoothTime: 0.3
 --- !u!1 &551056301
 GameObject:
   m_ObjectHideFlags: 0
@@ -93883,8 +93886,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 24043399951581938}
-  - component: {fileID: 6290701928507356577}
   - component: {fileID: 6290701928507356578}
+  - component: {fileID: 6290701928507356577}
   - component: {fileID: 5913157982591572632}
   - component: {fileID: 2324191593081938289}
   m_Layer: 6
@@ -95238,7 +95241,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 6140443759534957799}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c97d2b8fcfa75a44c884752654b7115d, type: 3}
+  m_Script: {fileID: 11500000, guid: efdc98be18a6965448b3258e60e733aa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   body: {fileID: 5913157982591572632}
@@ -95250,7 +95253,7 @@ MonoBehaviour:
   leftstick: {fileID: 7876730785937784829, guid: c6ad7b0ccda91b34ab9981689ace9aeb, type: 3}
   dpadup: {fileID: 7722564809163141782, guid: c6ad7b0ccda91b34ab9981689ace9aeb, type: 3}
   dpaddown: {fileID: -5019541649977915787, guid: c6ad7b0ccda91b34ab9981689ace9aeb, type: 3}
-  noiseStrength: 0.07
+  noiseStrength: 0.1
   noiseFrequencyRange: {x: 0.1, y: 0.6}
   smoothTime: 0.7
   cam: {fileID: 6616499680802704596}

@@ -14,6 +14,14 @@ public class DelayedFollow : MonoBehaviour
     private Queue<(Vector3 position, Quaternion rotation, float time)> history = new Queue<(Vector3, Quaternion, float)>();
     private bool isAvoidingObstacle = false; // Track whether the drone is in avoidance mode
 
+
+    [Header("Noise Properties")]
+    public float noiseStrength = 0.1f;
+    public Vector2 noiseFrequencyRange = new Vector2(1f, 3f);
+    private Vector3 velocity = Vector3.zero; // Used by SmoothDamp
+    public float smoothTime = 0.3f;
+    private Vector3 targetPosition;
+    private float nextNoiseTime = 0f;
     void Update()
     {
         // Record the current position, rotation, and time of the target drone
@@ -47,12 +55,5 @@ public class DelayedFollow : MonoBehaviour
 
             transform.rotation = Quaternion.Lerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
         }
-
-        CheckForObstaclesAndAdjustHeight();
-    }
-
-    void CheckForObstaclesAndAdjustHeight()
-    {
-        // Remain unchanged
     }
 }
