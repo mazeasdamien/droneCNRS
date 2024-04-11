@@ -37,20 +37,22 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: grass
-  m_Shader: {fileID: 46, guid: 0000000000000000f000000000000000, type: 0}
+  m_Shader: {fileID: 4800000, guid: 6e4ae4064600d784cac1e41a9e6f2e59, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
   - _ALPHATEST_ON
-  - _METALLICGLOSSMAP
+  - _DISABLE_SSR_TRANSPARENT
+  - _DOUBLESIDED_ON
+  - _ENABLE_GEOMETRIC_SPECULAR_AA
+  - _MASKMAP
   - _NORMALMAP
-  m_InvalidKeywords:
-  - _METALLICSPECGLOSSMAP
-  - _SURFACE_TYPE_TRANSPARENT
+  - _NORMALMAP_TANGENT_SPACE
+  m_InvalidKeywords: []
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 1
   m_DoubleSidedGI: 1
-  m_CustomRenderQueue: 2450
+  m_CustomRenderQueue: 2475
   stringTagMap:
     MotionVector: User
     RenderType: TransparentCutout
@@ -62,6 +64,9 @@ Material:
   - RayTracingPrepass
   - DepthOnly
   - SHADOWCASTER
+  - TransparentDepthPrepass
+  - TransparentDepthPostpass
+  - TransparentBackface
   m_LockedProperties: 
   m_SavedProperties:
     serializedVersion: 3
@@ -71,7 +76,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _BaseColorMap:
-        m_Texture: {fileID: 2800000, guid: fa93291fbf989dc45bc3f06476389061, type: 3}
+        m_Texture: {fileID: 2800000, guid: 600baa95dee0f4c40a9d558a5072f560, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _BaseColorMap0:
@@ -243,7 +248,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MaskMap:
-        m_Texture: {fileID: 2800000, guid: ab021d930cfb6b745b45883abea57a1c, type: 3}
+        m_Texture: {fileID: 2800000, guid: a8920f3921e41ee45b859530011df515, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MaskMap0:
@@ -267,7 +272,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _NormalMap:
-        m_Texture: {fileID: 2800000, guid: c24ba42fc896d074eb0d76eef75601fc, type: 3}
+        m_Texture: {fileID: 2800000, guid: e9c8a5506eb3f0045bf5b0b008a39efa, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _NormalMap0:
@@ -460,12 +465,12 @@ Material:
     - _AlphaClipThreshold: 0
     - _AlphaClipThresholdDepthPostpass: 0.6
     - _AlphaClipThresholdDepthPrepass: 0.9
-    - _AlphaCutoff: 0.5
+    - _AlphaCutoff: 0.111
     - _AlphaCutoffEnable: 1
     - _AlphaCutoffPostpass: 0.491
     - _AlphaCutoffPrepass: 0.5
     - _AlphaCutoffShadow: 0.491
-    - _AlphaDstBlend: 10
+    - _AlphaDstBlend: 0
     - _AlphaRemapMax: 1
     - _AlphaRemapMin: 0
     - _AlphaSrcBlend: 1
@@ -492,7 +497,7 @@ Material:
     - _CoatMask: 0
     - _Cull: 0
     - _CullMode: 0
-    - _CullModeForward: 2
+    - _CullModeForward: 0
     - _Cutoff: 0.111
     - _DecalBlend: 0.5
     - _DecalColorMask0: 15
@@ -633,15 +638,15 @@ Material:
     - _IridescenceThickness: 1
     - _LayerCount: 2
     - _LightmapUV: 0
-    - _LinkDetailsWithBase: 1
+    - _LinkDetailsWithBase: 0
     - _LinkDetailsWithBase0: 1
     - _LinkDetailsWithBase1: 1
     - _LinkDetailsWithBase2: 1
     - _LinkDetailsWithBase3: 1
     - _MappingMode: 0
     - _MaskBlendSrc: 1
-    - _MaterialID: 5
-    - _Metallic: 0
+    - _MaterialID: 1
+    - _Metallic: 1
     - _Metallic0: 0
     - _Metallic1: 0
     - _Metallic2: 0
@@ -707,7 +712,7 @@ Material:
     - _Smoothness3: 0.5
     - _SmoothnessMax: 0.7
     - _SmoothnessMin: 0.3
-    - _SmoothnessRemapMax: 0.53322583
+    - _SmoothnessRemapMax: 1
     - _SmoothnessRemapMax0: 1
     - _SmoothnessRemapMax1: 1
     - _SmoothnessRemapMax2: 1
@@ -730,10 +735,10 @@ Material:
     - _SrcBlend: 1
     - _SrcBlendAlpha: 1
     - _StencilRef: 0
-    - _StencilRefDepth: 0
+    - _StencilRefDepth: 8
     - _StencilRefDistortionVec: 4
-    - _StencilRefGBuffer: 2
-    - _StencilRefMV: 32
+    - _StencilRefGBuffer: 10
+    - _StencilRefMV: 40
     - _StencilWriteMask: 6
     - _StencilWriteMaskDepth: 9
     - _StencilWriteMaskDistortionVec: 4
@@ -746,7 +751,7 @@ Material:
     - _SubsurfaceMask3: 1
     - _SupportDecals: 1
     - _Surface: 1
-    - _SurfaceType: 1
+    - _SurfaceType: 0
     - _TessellationBackFaceCullEpsilon: -0.25
     - _TessellationFactor: 4
     - _TessellationFactorMaxDistance: 50
@@ -799,13 +804,13 @@ Material:
     - _UseShadowThreshold: 1
     - _VertexColorMode: 0
     - _WorkflowMode: 1
-    - _ZTestDepthEqualForOpaque: 4
+    - _ZTestDepthEqualForOpaque: 3
     - _ZTestGBuffer: 3
     - _ZTestModeDistortion: 4
     - _ZTestTransparent: 4
     - _ZWrite: 1
     m_Colors:
-    - _BaseColor: {r: 1, g: 0.9616413, b: 0.7122642, a: 1}
+    - _BaseColor: {r: 1, g: 0.96164125, b: 0.7122642, a: 1}
     - _BaseColor0: {r: 1, g: 1, b: 1, a: 1}
     - _BaseColor1: {r: 1, g: 1, b: 1, a: 1}
     - _BaseColor2: {r: 1, g: 1, b: 1, a: 1}

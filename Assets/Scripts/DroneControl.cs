@@ -123,11 +123,14 @@ public class DroneControl : MonoBehaviour
     {
         _verticalMovement = leftstick.action.ReadValue<Vector2>().y;
         float rotation = leftstick.action.ReadValue<Vector2>().x * rotationSpeed * Time.deltaTime;
-        transform.Rotate(0, rotation, 0, Space.World);
 
-        _rightStickInput = rightstick.action.ReadValue<Vector2>();
+        transform.Rotate(0, rotation, 0, Space.World);
+        // Right stick functionality for other purposes goes here
+        // For example, if right stick controls movement as well, it should be processed here.
+        _rightStickInput = rightstick.action.ReadValue<Vector2>(); // This allows for right stick input processing for movement or other actions
 
         float dpadVertical = dpadup.action.ReadValue<float>() - dpaddown.action.ReadValue<float>();
+
         float cameraRotationX = cameraRotationSpeed * Time.deltaTime * dpadVertical;
         float newRotationX = Mathf.Clamp(cam.localEulerAngles.x - cameraRotationX, 0, 90);
         cam.localEulerAngles = new Vector3(newRotationX, cam.localEulerAngles.y, cam.localEulerAngles.z);
@@ -135,12 +138,29 @@ public class DroneControl : MonoBehaviour
 
     private void ApplyMovement()
     {
+        // Get the intended movement direction based on input
         Vector3 localForwardBackward = transform.forward * _rightStickInput.y * flightSpeed * Time.fixedDeltaTime;
         Vector3 localLeftRight = transform.right * _rightStickInput.x * flightSpeed * Time.fixedDeltaTime;
         Vector3 verticalMove = Vector3.up * _verticalMovement * verticalSpeed * Time.fixedDeltaTime;
 
-        body.velocity = localForwardBackward + localLeftRight + verticalMove;
+        // Calculate total desired movement without noise
+        Vector3 desiredMovement = localForwardBackward + localLeftRight + verticalMove;
+
+        // Determine the magnitude of the desired movement to scale the noise accordingly
+        float movementMagnitude = desiredMovement.magnitude;
+
+        // Generate noise scaled by the magnitude of the movement. This makes the noise effect more pronounced
+        // during faster movements and more subtle during slower movements.
+        Vector3 noise = new Vector3(
+            Random.Range(-noiseStrength, noiseStrength) * movementMagnitude,
+            Random.Range(-noiseStrength, noiseStrength) * movementMagnitude,
+            Random.Range(-noiseStrength, noiseStrength) * movementMagnitude
+        );
+
+        // Apply the scaled noise to the velocity, adding it to the desired movement
+        body.velocity = desiredMovement + noise;
     }
+
 
     private void UpdateTargetPositionWithNoise()
     {
