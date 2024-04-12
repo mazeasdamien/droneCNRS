@@ -42,8 +42,8 @@ MonoBehaviour:
           inWeight: 0
           outWeight: 0
         - serializedVersion: 3
-          time: 0.67277485
-          value: 0.9171271
+          time: 0.7037279
+          value: 0.72816896
           inSlope: 0.44431576
           outSlope: 0.44431576
           tangentMode: 0
@@ -229,13 +229,13 @@ MonoBehaviour:
     m_Value: 0
   intensity:
     m_OverrideState: 1
-    m_Value: 2.24
+    m_Value: 3.14
   directLightingStrength:
-    m_OverrideState: 0
-    m_Value: 0
+    m_OverrideState: 1
+    m_Value: 0.556
   radius:
     m_OverrideState: 1
-    m_Value: 2.4
+    m_Value: 4.2
   spatialBilateralAggressiveness:
     m_OverrideState: 0
     m_Value: 0.15
@@ -270,7 +270,7 @@ MonoBehaviour:
     m_Value: 1
   m_MaximumRadiusInPixels:
     m_OverrideState: 1
-    m_Value: 73
+    m_Value: 84
   m_BilateralUpsample:
     m_OverrideState: 1
     m_Value: 1
@@ -317,6 +317,94 @@ MonoBehaviour:
   saturation:
     m_OverrideState: 1
     m_Value: 65
+--- !u!114 &-949595850671175729
+MonoBehaviour:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 953beb541740ddc499d005ee80c9ff29, type: 3}
+  m_Name: Fog
+  m_EditorClassIdentifier: 
+  active: 1
+  quality:
+    m_OverrideState: 0
+    m_Value: 1
+  enabled:
+    m_OverrideState: 1
+    m_Value: 1
+  colorMode:
+    m_OverrideState: 1
+    m_Value: 1
+  color:
+    m_OverrideState: 0
+    m_Value: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  tint:
+    m_OverrideState: 1
+    m_Value: {r: 1, g: 1, b: 1, a: 1}
+  maxFogDistance:
+    m_OverrideState: 1
+    m_Value: 5004.8
+  mipFogMaxMip:
+    m_OverrideState: 0
+    m_Value: 0.5
+  mipFogNear:
+    m_OverrideState: 0
+    m_Value: 0
+  mipFogFar:
+    m_OverrideState: 0
+    m_Value: 1000
+  baseHeight:
+    m_OverrideState: 1
+    m_Value: -110.7
+  maximumHeight:
+    m_OverrideState: 1
+    m_Value: 231.1
+  meanFreePath:
+    m_OverrideState: 1
+    m_Value: 4.22
+  enableVolumetricFog:
+    m_OverrideState: 1
+    m_Value: 1
+  albedo:
+    m_OverrideState: 1
+    m_Value: {r: 1, g: 1, b: 1, a: 1}
+  globalLightProbeDimmer:
+    m_OverrideState: 0
+    m_Value: 1
+  depthExtent:
+    m_OverrideState: 0
+    m_Value: 64
+  denoisingMode:
+    m_OverrideState: 0
+    m_Value: 2
+  anisotropy:
+    m_OverrideState: 0
+    m_Value: 0
+  sliceDistributionUniformity:
+    m_OverrideState: 0
+    m_Value: 0.75
+  m_FogControlMode:
+    m_OverrideState: 0
+    m_Value: 0
+  screenResolutionPercentage:
+    m_OverrideState: 0
+    m_Value: 12.5
+  volumeSliceCount:
+    m_OverrideState: 0
+    m_Value: 64
+  m_VolumetricFogBudget:
+    m_OverrideState: 0
+    m_Value: 0.33
+  m_ResolutionDepthRatio:
+    m_OverrideState: 0
+    m_Value: 0.666
+  directionalLightsOnly:
+    m_OverrideState: 0
+    m_Value: 0
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -330,147 +418,11 @@ MonoBehaviour:
   m_Name: Sky and Fog Settings
   m_EditorClassIdentifier: 
   components:
-  - {fileID: 5549709469282307599}
-  - {fileID: 136341694378860769}
-  - {fileID: 6853617601204734007}
   - {fileID: -6309397918611703790}
   - {fileID: 5240035656075563216}
   - {fileID: -7025459629603728360}
   - {fileID: -1670770132982835363}
---- !u!114 &136341694378860769
-MonoBehaviour:
-  m_ObjectHideFlags: 3
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d877ec3e844f2ca46830012e8e79319b, type: 3}
-  m_Name: PhysicallyBasedSky
-  m_EditorClassIdentifier: 
-  active: 1
-  rotation:
-    m_OverrideState: 0
-    m_Value: 0
-  skyIntensityMode:
-    m_OverrideState: 0
-    m_Value: 0
-  exposure:
-    m_OverrideState: 0
-    m_Value: 0
-  multiplier:
-    m_OverrideState: 0
-    m_Value: 1
-  upperHemisphereLuxValue:
-    m_OverrideState: 0
-    m_Value: 1
-  upperHemisphereLuxColor:
-    m_OverrideState: 0
-    m_Value: {x: 0, y: 0, z: 0}
-  desiredLuxValue:
-    m_OverrideState: 0
-    m_Value: 20000
-  updateMode:
-    m_OverrideState: 0
-    m_Value: 0
-  updatePeriod:
-    m_OverrideState: 0
-    m_Value: 0
-  includeSunInBaking:
-    m_OverrideState: 0
-    m_Value: 0
-  type:
-    m_OverrideState: 1
-    m_Value: 1
-  sphericalMode:
-    m_OverrideState: 0
-    m_Value: 1
-  seaLevel:
-    m_OverrideState: 0
-    m_Value: 0
-  planetaryRadius:
-    m_OverrideState: 0
-    m_Value: 6378100
-  planetCenterPosition:
-    m_OverrideState: 0
-    m_Value: {x: 0, y: -6378100, z: 0}
-  airDensityR:
-    m_OverrideState: 0
-    m_Value: 0.04534
-  airDensityG:
-    m_OverrideState: 0
-    m_Value: 0.10237241
-  airDensityB:
-    m_OverrideState: 0
-    m_Value: 0.23264056
-  airTint:
-    m_OverrideState: 0
-    m_Value: {r: 0.9, g: 0.9, b: 1, a: 1}
-  airMaximumAltitude:
-    m_OverrideState: 0
-    m_Value: 55261.973
-  aerosolDensity:
-    m_OverrideState: 0
-    m_Value: 0.01192826
-  aerosolTint:
-    m_OverrideState: 0
-    m_Value: {r: 0.9, g: 0.9, b: 0.9, a: 1}
-  aerosolMaximumAltitude:
-    m_OverrideState: 0
-    m_Value: 8289.296
-  aerosolAnisotropy:
-    m_OverrideState: 0
-    m_Value: 0
-  numberOfBounces:
-    m_OverrideState: 0
-    m_Value: 3
-  groundTint:
-    m_OverrideState: 0
-    m_Value: {r: 0.4, g: 0.25, b: 0.15, a: 1}
-  groundColorTexture:
-    m_OverrideState: 0
-    m_Value: {fileID: 0}
-  groundEmissionTexture:
-    m_OverrideState: 0
-    m_Value: {fileID: 0}
-  groundEmissionMultiplier:
-    m_OverrideState: 0
-    m_Value: 1
-  planetRotation:
-    m_OverrideState: 0
-    m_Value: {x: 0, y: 0, z: 0}
-  spaceEmissionTexture:
-    m_OverrideState: 0
-    m_Value: {fileID: 0}
-  spaceEmissionMultiplier:
-    m_OverrideState: 0
-    m_Value: 1
-  spaceRotation:
-    m_OverrideState: 0
-    m_Value: {x: 0, y: 0, z: 0}
-  colorSaturation:
-    m_OverrideState: 0
-    m_Value: 1
-  alphaSaturation:
-    m_OverrideState: 0
-    m_Value: 1
-  alphaMultiplier:
-    m_OverrideState: 0
-    m_Value: 1
-  horizonTint:
-    m_OverrideState: 0
-    m_Value: {r: 1, g: 1, b: 1, a: 1}
-  zenithTint:
-    m_OverrideState: 0
-    m_Value: {r: 1, g: 1, b: 1, a: 1}
-  horizonZenithShift:
-    m_OverrideState: 0
-    m_Value: 0
-  m_SkyVersion: 1
-  m_ObsoleteEarthPreset:
-    m_OverrideState: 0
-    m_Value: 1
+  - {fileID: -949595850671175729}
 --- !u!114 &5240035656075563216
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -486,7 +438,7 @@ MonoBehaviour:
   active: 1
   mode:
     m_OverrideState: 1
-    m_Value: 0
+    m_Value: 1
   meteringMode:
     m_OverrideState: 0
     m_Value: 2
@@ -622,78 +574,3 @@ MonoBehaviour:
   proceduralSoftness:
     m_OverrideState: 0
     m_Value: 0.5
---- !u!114 &5549709469282307599
-MonoBehaviour:
-  m_ObjectHideFlags: 3
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0d7593b3a9277ac4696b20006c21dde2, type: 3}
-  m_Name: VisualEnvironment
-  m_EditorClassIdentifier: 
-  active: 1
-  skyType:
-    m_OverrideState: 1
-    m_Value: 1
-  cloudType:
-    m_OverrideState: 1
-    m_Value: 1
-  skyAmbientMode:
-    m_OverrideState: 0
-    m_Value: 1
-  windOrientation:
-    m_OverrideState: 1
-    m_Value: 0
-  windSpeed:
-    m_OverrideState: 1
-    m_Value: 0
-  fogType:
-    m_OverrideState: 1
-    m_Value: 0
---- !u!114 &6853617601204734007
-MonoBehaviour:
-  m_ObjectHideFlags: 3
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7ddcec8a8eb2d684d833ac8f5d26aebd, type: 3}
-  m_Name: HDShadowSettings
-  m_EditorClassIdentifier: 
-  active: 1
-  interCascadeBorders: 1
-  maxShadowDistance:
-    m_OverrideState: 1
-    m_Value: 500
-  directionalTransmissionMultiplier:
-    m_OverrideState: 0
-    m_Value: 1
-  cascadeShadowSplitCount:
-    m_OverrideState: 0
-    m_Value: 4
-  cascadeShadowSplit0:
-    m_OverrideState: 0
-    m_Value: 0.05
-  cascadeShadowSplit1:
-    m_OverrideState: 0
-    m_Value: 0.15
-  cascadeShadowSplit2:
-    m_OverrideState: 0
-    m_Value: 0.3
-  cascadeShadowBorder0:
-    m_OverrideState: 0
-    m_Value: 0
-  cascadeShadowBorder1:
-    m_OverrideState: 0
-    m_Value: 0
-  cascadeShadowBorder2:
-    m_OverrideState: 0
-    m_Value: 0
-  cascadeShadowBorder3:
-    m_OverrideState: 0
-    m_Value: 0

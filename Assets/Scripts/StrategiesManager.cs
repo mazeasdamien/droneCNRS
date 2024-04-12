@@ -12,6 +12,12 @@ public class StrategiesManager : MonoBehaviour
     public GameObject masterDrone;
     public Camera targetCamera;
 
+    public GameObject cameraMAP;
+
+    public GameObject map;
+    public GameObject backgroundS2;
+    public GameObject backgroundS34;
+
     [SerializeField]
     private int currentStrategy = 1;
 
@@ -24,9 +30,6 @@ public class StrategiesManager : MonoBehaviour
             ApplyStrategy();
         }
     }
-
-    [SerializeField]
-    private float strategy2Width = 1f;
 
     private void OnEnable()
     {
@@ -66,28 +69,43 @@ public class StrategiesManager : MonoBehaviour
                 masterDrone.SetActive(false);
                 Littlebar.SetActive(false);
                 BigBar.SetActive(false);
+                cameraMAP.SetActive(false);
+                backgroundS2.SetActive(false);
+                backgroundS34.SetActive(false);
                 break;
             case 2:
-                targetCamera.rect = new Rect(0f, 0.5f, strategy2Width, 0.5f);
+                targetCamera.rect = new Rect(0.25f, 0f, 0.5f, 0.5f);
                 masterDrone.SetActive(true);
                 Littlebar.SetActive(false);
                 BigBar.SetActive(true);
+                cameraMAP.SetActive(false);
+                map.SetActive(false);
+                backgroundS2.SetActive(true);
+                backgroundS34.SetActive(false);
                 break;
             case 3:
-                targetCamera.rect = new Rect(-0.5f, 0f, 1f, 1f);
+                targetCamera.rect = new Rect(-0.76f, 0f, 1.26f, 0.5f);
                 masterDrone.SetActive(false);
                 LOW.SetActive(false);
                 HIGH.SetActive(true);
                 Littlebar.SetActive(true);
                 BigBar.SetActive(false);
+                cameraMAP.SetActive(true);
+                map.SetActive(true);
+                backgroundS2.SetActive(false);
+                backgroundS34.SetActive(true);
                 break;
             case 4:
-                targetCamera.rect = new Rect(-0.5f, 0f, 1f, 1f);
+                targetCamera.rect = new Rect(-0.76f, 0f, 1.26f, 0.5f);
                 masterDrone.SetActive(false);
                 LOW.SetActive(true);
                 HIGH.SetActive(false);
                 Littlebar.SetActive(true);
                 BigBar.SetActive(false);
+                cameraMAP.SetActive(true);
+                map.SetActive(true);
+                backgroundS2.SetActive(false);
+                backgroundS34.SetActive(true);
                 break;
             default:
                 Debug.LogError("Unhandled strategy number.");
