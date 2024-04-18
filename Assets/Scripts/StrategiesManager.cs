@@ -1,33 +1,53 @@
 using UnityEngine;
+using TMPro; // Import TextMesh Pro namespace
+using Unity.VisualScripting;
 
 [ExecuteInEditMode]
 public class StrategiesManager : MonoBehaviour
 {
+    public enum Strategy
+    {
+        Strategy1 = 1,
+        Strategy2,
+        Strategy3,
+        Strategy4
+    }
+
     public GameObject LOW;
     public GameObject HIGH;
-
     public GameObject Littlebar;
     public GameObject BigBar;
-
     public GameObject masterDrone;
     public Camera targetCamera;
-
     public GameObject cameraMAP;
-
     public GameObject map;
     public GameObject backgroundS2;
     public GameObject backgroundS34;
 
     [SerializeField]
-    private int currentStrategy = 1;
+    private Strategy currentStrategy = Strategy.Strategy1;
 
-    public int CurrentStrategy
+    public TMP_Dropdown dropdown; // Reference to the TMP Dropdown
+
+    private void Start()
+    {
+        if (dropdown != null)
+        {
+            dropdown.onValueChanged.AddListener(DropdownValueChanged);
+        }
+        ApplyStrategy();
+    }
+
+    public Strategy CurrentStrategy
     {
         get => currentStrategy;
-        private set
+        set
         {
-            currentStrategy = value;
-            ApplyStrategy();
+            if (currentStrategy != value)
+            {
+                currentStrategy = value;
+                ApplyStrategy();
+            }
         }
     }
 
@@ -40,18 +60,8 @@ public class StrategiesManager : MonoBehaviour
     {
         if (Application.isEditor)
         {
-            SetStrategy(currentStrategy); // Ensures ApplyStrategy is called upon Inspector changes
+            ApplyStrategy();
         }
-    }
-
-    public void SetStrategy(int strategyNumber)
-    {
-        if (strategyNumber < 1 || strategyNumber > 4)
-        {
-            Debug.LogError("Invalid strategy number. Please select a number between 1 and 4.");
-            return;
-        }
-        CurrentStrategy = strategyNumber;
     }
 
     private void ApplyStrategy()
@@ -64,7 +74,7 @@ public class StrategiesManager : MonoBehaviour
 
         switch (currentStrategy)
         {
-            case 1:
+            case Strategy.Strategy1:
                 targetCamera.rect = new Rect(0f, 0f, 1f, 1f);
                 masterDrone.SetActive(false);
                 Littlebar.SetActive(false);
@@ -73,7 +83,7 @@ public class StrategiesManager : MonoBehaviour
                 backgroundS2.SetActive(false);
                 backgroundS34.SetActive(false);
                 break;
-            case 2:
+            case Strategy.Strategy2:
                 targetCamera.rect = new Rect(0.25f, 0f, 0.5f, 0.5f);
                 masterDrone.SetActive(true);
                 Littlebar.SetActive(false);
@@ -83,19 +93,7 @@ public class StrategiesManager : MonoBehaviour
                 backgroundS2.SetActive(true);
                 backgroundS34.SetActive(false);
                 break;
-            case 3:
-                targetCamera.rect = new Rect(-0.76f, 0f, 1.26f, 0.5f);
-                masterDrone.SetActive(false);
-                LOW.SetActive(false);
-                HIGH.SetActive(true);
-                Littlebar.SetActive(true);
-                BigBar.SetActive(false);
-                cameraMAP.SetActive(true);
-                map.SetActive(true);
-                backgroundS2.SetActive(false);
-                backgroundS34.SetActive(true);
-                break;
-            case 4:
+            case Strategy.Strategy3:
                 targetCamera.rect = new Rect(-0.76f, 0f, 1.26f, 0.5f);
                 masterDrone.SetActive(false);
                 LOW.SetActive(true);
@@ -107,9 +105,27 @@ public class StrategiesManager : MonoBehaviour
                 backgroundS2.SetActive(false);
                 backgroundS34.SetActive(true);
                 break;
+            case Strategy.Strategy4:
+                targetCamera.rect = new Rect(-0.76f, 0f, 1.26f, 0.5f);
+                masterDrone.SetActive(false);
+                LOW.SetActive(false);
+                HIGH.SetActive(true);
+                Littlebar.SetActive(true);
+                BigBar.SetActive(false);
+                cameraMAP.SetActive(true);
+                map.SetActive(true);
+                backgroundS2.SetActive(false);
+                backgroundS34.SetActive(true);
+                break;
             default:
                 Debug.LogError("Unhandled strategy number.");
                 break;
         }
+    }
+
+    // Method called when the TMP Dropdown value changes
+    private void DropdownValueChanged(int index)
+    {
+        CurrentStrategy = (Strategy)(index + 1); // +1 to align dropdown index (0-based) with enum (1-based)
     }
 }

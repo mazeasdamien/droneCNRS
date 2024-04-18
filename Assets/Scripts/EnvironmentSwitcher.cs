@@ -1,18 +1,33 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
+using TMPro; // Namespace for TextMesh Pro components
 
 public class EnvironmentSwitcher : MonoBehaviour
 {
-    public GameObject[] gameObjects;
-    internal int currentIndex = 0;
-
-    void Awake()
+    // Enum to represent the environments
+    public enum Environment
     {
-        UpdateActiveGameObject();
+        Environment1,
+        Environment2,
+        Environment3,
+        Environment4
     }
 
-    public void SetActiveObject(int index)
+    public TMP_Dropdown dropdown; // Reference to the TMP Dropdown
+    public GameObject[] gameObjects; // Array of environment GameObjects
+    private int currentIndex = 0; // Internal variable to keep track of the current index
+
+    void Start()
+    {
+        if (dropdown != null)
+        {
+            dropdown.onValueChanged.AddListener(delegate { DropdownValueChanged(dropdown); });
+        }
+        // Optionally set the default selection from the current environment
+        dropdown.value = currentIndex;
+        SetActiveObject(dropdown.value);
+    }
+
+    void SetActiveObject(int index)
     {
         currentIndex = index;
         UpdateActiveGameObject();
@@ -29,9 +44,9 @@ public class EnvironmentSwitcher : MonoBehaviour
         }
     }
 
-    public GameObject GetCurrentGameObject()
+    // Handler for when the dropdown value changes
+    void DropdownValueChanged(TMP_Dropdown change)
     {
-        return gameObjects[currentIndex];
+        SetActiveObject(change.value);
     }
-
 }
