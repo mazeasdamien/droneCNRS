@@ -10,7 +10,7 @@ public class Timer : MonoBehaviour
     public TextMeshProUGUI timerText;
     public GameObject menu;
     public Button startButton;
-    public float countdownTime = 180;
+    public float countdownTime;
 
     private float timeRemaining;
     private bool timerIsRunning = false;
@@ -24,6 +24,8 @@ public class Timer : MonoBehaviour
     public InputActionReference dpaddown;
     public InputActionReference southbutton;
 
+    public DroneCollisionDetector droneCollisionDetector;
+
     public Button recordButton;
     public TMP_InputField participantIDInput;
     public TMP_Dropdown environmentDropdown;
@@ -32,11 +34,14 @@ public class Timer : MonoBehaviour
     private Dictionary<string, (float duration, int count)> inputSummary = new Dictionary<string, (float duration, int count)>();
     private bool isLoggingStarted = false; // Add this at the class level
     private bool previousSouthButtonState = false;
+    private float sessionStartTime;
+
+    private int screenshotCount = 0;
 
     // Inside Timer class
 
-    private int totalCollisions = 0;
-    private float collisionPercentage = 0f;
+    public int totalCollisions = 0;
+    public float collisionPercentage = 0f;
 
     public void UpdateCollisionSummary(int collisionCount, float percentage)
     {
@@ -83,10 +88,10 @@ public class Timer : MonoBehaviour
             timerIsRunning = true;
             timeRemaining = countdownTime;
             menu.SetActive(false);
+            sessionStartTime = Time.time;  // Store the start time
             StartLogging();
         }
     }
-
 
     private void StartLogging()
     {
@@ -109,6 +114,7 @@ public class Timer : MonoBehaviour
         }
         string logFileName = $"Log_{participantIDInput.text}_{environmentDropdown.options[environmentDropdown.value].text}_{strategyDropdown.options[strategyDropdown.value].text}.txt";
         writer = new StreamWriter(Path.Combine(folderPath, logFileName), true);
+        writer.WriteLine($"Unity Time Before Countdown: {sessionStartTime}s");
 
         if (summaryWriter != null)
         {
@@ -117,6 +123,7 @@ public class Timer : MonoBehaviour
         string summaryFileName = $"Summary_{participantIDInput.text}_{environmentDropdown.options[environmentDropdown.value].text}_{strategyDropdown.options[strategyDropdown.value].text}.txt";
         summaryWriter = new StreamWriter(Path.Combine(folderPath, summaryFileName), false); // Open new file for each session
     }
+
 
     private void LogInput()
     {
@@ -136,15 +143,17 @@ public class Timer : MonoBehaviour
             UpdateInputSummary("DPadUp", new Vector2(dpadUpValue, 0));
             UpdateInputSummary("DPadDown", new Vector2(dpadDownValue, 0));
 
-            // Update for South Button
-            if (currentSouthButtonState && !previousSouthButtonState)  // Only log if button was pressed and was previously not pressed
+            // Check for South Button press
+            if (currentSouthButtonState && !previousSouthButtonState)
             {
                 UpdateInputSummary("SouthButton", new Vector2(1, 0));
+                TakeScreenshot();  // Capture screenshot when the button is pressed
             }
         }
 
-        previousSouthButtonState = currentSouthButtonState; // Update the state for the next frame
+        previousSouthButtonState = currentSouthButtonState;
     }
+
 
     private void UpdateInputSummary(string inputName, Vector2 inputValues)
     {
@@ -161,12 +170,17 @@ public class Timer : MonoBehaviour
 
     private void EndSession()
     {
+        if (droneCollisionDetector != null)
+        {
+            droneCollisionDetector.UpdateCollisionSummary(); // Ensure this gets called before finalizing logs
+        }
         timerIsRunning = false;
         isLoggingStarted = false; // Reset the flag for the next session
         UpdateTimerDisplay(0);
         menu.SetActive(true);
         FinalizeLogging();
     }
+
 
     private void FinalizeLogging()
     {
@@ -197,12 +211,10 @@ public class Timer : MonoBehaviour
             summaryWriter.WriteLine($"Total Collisions: {totalCollisions}");
             summaryWriter.WriteLine($"Collision Percentage of Countdown Time: {collisionPercentage}%");
 
-
             summaryWriter.Close();
             summaryWriter = null;
         }
     }
-
 
     private void OnApplicationQuit()
     {
@@ -216,4 +228,21 @@ public class Timer : MonoBehaviour
         float seconds = Mathf.FloorToInt(timeToDisplay % 60);
         timerText.text = string.Format("{0:00}:{1:00}", minutes, seconds);
     }
+
+    private void TakeScreenshot()
+    {
+        // Increment screenshot counter
+        screenshotCount++;
+
+        // Build the screenshot file name
+        string screenshotFileName = $"Screenshot_{participantIDInput.text}_{environmentDropdown.options[environmentDropdown.value].text}_{strategyDropdown.options[strategyDropdown.value].text}_{screenshotCount}.jpg";
+        string folderPath = Path.Combine(Application.dataPath, "Data");
+        string screenshotPath = Path.Combine(folderPath, screenshotFileName);
+
+        // Capture the screenshot
+        ScreenCapture.CaptureScreenshot(screenshotPath);
+
+        Debug.Log($"Screenshot taken: {screenshotPath}");
+    }
+
 }
