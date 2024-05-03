@@ -1,42 +1,56 @@
 using UnityEngine;
-using UnityEngine.InputSystem; // Make sure to include this for the Input System
+using UnityEngine.InputSystem;
 
 public class DroneCollisionDetector : MonoBehaviour
 {
-    // This method is called when the drone continues to collide with another object.
-    private void OnCollisionStay(Collision collision)
-    {
-        // Check if the object we collided with has the tag 'environment'.
-        if (collision.gameObject.tag == "environment")
-        {
-            Debug.Log("Drone has touched environment!");
+    private int collisionCount = 0;
+    private float totalCollisionTime = 0f;
+    private Timer timerScript; // Reference to Timer script
+    private float countdownTime = 0f;
 
-            // Trigger gamepad vibration
-            VibrateGamepad();
+    private void Start()
+    {
+        timerScript = FindObjectOfType<Timer>(); // Find Timer script in the scene
+        if (timerScript != null)
+        {
+            countdownTime = timerScript.countdownTime; // Initialize countdownTime
+            timerScript.UpdateCountdownTime(countdownTime); // Update countdownTime in case it changes
         }
     }
 
-    private void VibrateGamepad()
+    private void Update()
     {
-        // Assuming a single gamepad is connected and used.
-        var gamepad = Gamepad.current;
-        if (gamepad != null)
+        if (timerScript != null && countdownTime != timerScript.countdownTime)
         {
-            // Set vibration (leftMotor, rightMotor). Adjust intensity as needed.
-            gamepad.SetMotorSpeeds(0.5f, 0.5f); // Vibrate at half intensity for both motors
-
-            // Optional: Stop vibration after a short delay, if desired.
-            Invoke("StopVibration", 0.5f); // Stop after 0.5 seconds
+            countdownTime = timerScript.countdownTime; // Update countdownTime if it changes
         }
     }
 
-    private void StopVibration()
+    private void OnCollisionEnter(Collision collision)
     {
-        var gamepad = Gamepad.current;
-        if (gamepad != null)
+        if (collision.gameObject.CompareTag("environment"))
         {
-            // Stop vibration
-            gamepad.SetMotorSpeeds(0f, 0f);
+            collisionCount++;
+        }
+    }
+
+    private void OnCollisionExit(Collision collision)
+    {
+        if (collision.gameObject.CompareTag("environment"))
+        {
+            totalCollisionTime += Time.deltaTime;
+        }
+    }
+
+    private void OnDestroy()
+    {
+        // Calculate the percentage of time spent colliding during the countdown
+        float collisionPercentage = (totalCollisionTime / countdownTime) * 100f;
+
+        // Access the Timer script and update the collision data in the summary
+        if (timerScript != null)
+        {
+            timerScript.UpdateCollisionSummary(collisionCount, collisionPercentage);
         }
     }
 }

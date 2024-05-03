@@ -15,15 +15,6 @@
                     "initialStateCheck": true
                 },
                 {
-                    "name": "vibrationtest",
-                    "type": "Button",
-                    "id": "41e895a1-63ff-4b5d-a1e2-713471d533a8",
-                    "expectedControlType": "Button",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": false
-                },
-                {
                     "name": "rightstick",
                     "type": "Value",
                     "id": "6c9273bc-36fc-4846-b2db-b178888b3fb6",
@@ -58,6 +49,15 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "flag",
+                    "type": "Button",
+                    "id": "cf942873-a41c-43c8-b2b2-fe67cbaf1c17",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -69,17 +69,6 @@
                     "processors": "",
                     "groups": "controller",
                     "action": "leftstick",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "47508158-9536-4fc6-b87a-362646503f11",
-                    "path": "<Gamepad>/buttonSouth",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "vibrationtest",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
@@ -124,6 +113,17 @@
                     "processors": "",
                     "groups": "",
                     "action": "orbit",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "5a1ca778-5faa-463e-95f7-4be133aceb26",
+                    "path": "<Gamepad>/buttonSouth",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "flag",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

@@ -166,10 +166,5 @@ namespace Tobii.Research.Unity
 
             _file.WriteEndElement();
         }
-
-        public static implicit operator ScreenBasedSaveData(data_recording v)
-        {
-            throw new NotImplementedException();
-        }
     }
 }
