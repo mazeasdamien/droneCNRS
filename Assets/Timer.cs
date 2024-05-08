@@ -124,7 +124,6 @@ public class Timer : MonoBehaviour
         summaryWriter = new StreamWriter(Path.Combine(folderPath, summaryFileName), false); // Open new file for each session
     }
 
-
     private void LogInput()
     {
         Vector2 leftStickValues = leftstick.action.ReadValue<Vector2>();
@@ -133,17 +132,20 @@ public class Timer : MonoBehaviour
         float dpadDownValue = dpaddown.action.ReadValue<float>();
         bool currentSouthButtonState = southbutton.action.ReadValue<float>() > 0;
 
+        // Check if any input has occurred
         if (leftStickValues != Vector2.zero || rightStickValues != Vector2.zero || dpadUpValue != 0 || dpadDownValue != 0 || currentSouthButtonState != previousSouthButtonState)
         {
-            string inputLog = $"Time Remaining: {Mathf.FloorToInt(timeRemaining / 60):00}:{Mathf.FloorToInt(timeRemaining % 60):00}, Left Stick: {leftStickValues}, Right Stick: {rightStickValues}, D-Pad Up: {dpadUpValue}, D-Pad Down: {dpadDownValue}, South Button: {currentSouthButtonState}";
+            // Log the input with Unity time
+            string inputLog = $"Unity Time: {Time.time}s, Time Remaining: {Mathf.FloorToInt(timeRemaining / 60):00}:{Mathf.FloorToInt(timeRemaining % 60):00}, Left Stick: {leftStickValues}, Right Stick: {rightStickValues}, D-Pad Up: {dpadUpValue}, D-Pad Down: {dpadDownValue}, South Button: {currentSouthButtonState}";
             writer.WriteLine(inputLog);
 
+            // Update the summary for input usage
             UpdateInputSummary("LeftStick", leftStickValues);
             UpdateInputSummary("RightStick", rightStickValues);
             UpdateInputSummary("DPadUp", new Vector2(dpadUpValue, 0));
             UpdateInputSummary("DPadDown", new Vector2(dpadDownValue, 0));
 
-            // Check for South Button press
+            // Specific handling for South Button press
             if (currentSouthButtonState && !previousSouthButtonState)
             {
                 UpdateInputSummary("SouthButton", new Vector2(1, 0));
@@ -153,6 +155,7 @@ public class Timer : MonoBehaviour
 
         previousSouthButtonState = currentSouthButtonState;
     }
+
 
 
     private void UpdateInputSummary(string inputName, Vector2 inputValues)
