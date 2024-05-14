@@ -19,6 +19,7 @@ public class DataRecorder : MonoBehaviour
     public Canvas canvas;
     public RawImage left;
     public RawImage right;
+
     private void StartRecording()
     {
         string participantId = participantIdInput.text;
@@ -45,12 +46,12 @@ public class DataRecorder : MonoBehaviour
                 long rawTimestamp = DateTime.Now.Ticks;
                 string line = $"{formattedTime},{rawTimestamp},{data.Left.PupilDiameterValid},{data.Left.PupilDiameter},{data.Left.GazePointOnDisplayArea.x},{data.Left.GazePointOnDisplayArea.y},{data.Right.PupilDiameterValid},{data.Right.PupilDiameter},{data.Right.GazePointOnDisplayArea.x},{data.Right.GazePointOnDisplayArea.y}";
 
-                //MoveRawImage(left, data.Left.GazePointOnDisplayArea);
-                //MoveRawImage(right, data.Right.GazePointOnDisplayArea);
+                MoveRawImage(left, data.Left.GazePointOnDisplayArea);
+                MoveRawImage(right, data.Right.GazePointOnDisplayArea);
 
                 _streamWriter.WriteLine(line);
             }
-            yield return new WaitForSeconds(1f / 60f);
+            yield return new WaitForSeconds(1f / 60f); // Record at 60 FPS
         }
     }
 
@@ -75,6 +76,7 @@ public class DataRecorder : MonoBehaviour
         }
         Debug.Log("Recording stopped");
     }
+
     private void MoveRawImage(RawImage image, Vector2 normalizedPosition)
     {
         Vector2 screenPosition = new Vector2(normalizedPosition.x * Screen.width, (1 - normalizedPosition.y) * Screen.height);

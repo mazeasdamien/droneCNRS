@@ -22,8 +22,7 @@ public class LSLReceiver : MonoBehaviour
                 var info = inlet.info();
                 Debug.Log($"Stream Name: {info.name()}, Type: {info.type()}, Channel Count: {info.channel_count()}, Sampling Rate: {info.nominal_srate()}");
 
-                // Close the inlet if not needed beyond this point
-                inlet.close_stream();  // Check if there is a close or dispose method available in your LSL library
+                inlet.close_stream();
             }
         }
         else
@@ -34,10 +33,9 @@ public class LSLReceiver : MonoBehaviour
 
     private void OnDestroy()
     {
-        // Properly close the inlet when the GameObject is destroyed or script is disabled
         if (inlet != null)
         {
-            inlet.close_stream();  // Again, ensure the method to close is correctly named based on the LSL library documentation
+            inlet.close_stream();
         }
     }
 }

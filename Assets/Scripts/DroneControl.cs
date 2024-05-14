@@ -1,9 +1,14 @@
+using System;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 public class DroneControl : MonoBehaviour
 {
+    // Singleton instance
+    public static DroneControl Instance { get; private set; }
+
     [Header("Movement Properties")]
     public Rigidbody body;
     public float flightSpeed = 30f;
@@ -16,6 +21,7 @@ public class DroneControl : MonoBehaviour
     public InputActionReference leftstick;
     public InputActionReference dpadup;
     public InputActionReference dpaddown;
+    public InputActionReference southbutton;
 
     [Header("Noise Properties")]
     public float noiseStrength = 0.1f;
@@ -28,6 +34,9 @@ public class DroneControl : MonoBehaviour
     [Header("Camera")]
     public Transform cam;
 
+    [Header("Drone Path Recording")]
+    public GameObject originObject; // Reference to the origin GameObject
+
     private Vector2 _rightStickInput;
     private float _verticalMovement;
     private bool isDroneMoving = false;
@@ -39,12 +48,35 @@ public class DroneControl : MonoBehaviour
     private Queue<Vector3> positionHistory = new Queue<Vector3>();
     private Queue<Quaternion> rotationHistory = new Queue<Quaternion>();
 
+    private StreamWriter inputLogger; // StreamWriter for logging inputs
+    private bool isLogging = false; // Flag to control logging
+
+    private float currentCountdown = 0f; // Variable to store the current countdown value
+
+    private void Awake()
+    {
+        // Singleton pattern implementation
+        if (Instance == null)
+        {
+            Instance = this;
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+    }
 
     private void Start()
     {
         targetPosition = transform.position; // Initialize target position
         lastRecordedPosition = transform.position; // Initialize last recorded position
         UpdateNoiseTime();
+
+        // Initialize the DronePathRecorder
+        if (DronePathRecorder.Instance != null)
+        {
+            DronePathRecorder.Instance.Initialize(originObject, transform);
+        }
     }
 
     private void Update()
@@ -79,6 +111,12 @@ public class DroneControl : MonoBehaviour
         }
 
         AdjustRotation();
+
+        // Log inputs if logging is enabled
+        if (isLogging)
+        {
+            LogInput();
+        }
     }
 
     private void FixedUpdate()
@@ -86,10 +124,9 @@ public class DroneControl : MonoBehaviour
         ApplyMovement();
     }
 
-
     private void RecordPositionAndRotation()
     {
-        //Debug.Log($"Recording Position: {transform.position}, Rotation: {transform.rotation}");
+        // Debug.Log($"Recording Position: {transform.position}, Rotation: {transform.rotation}");
 
         positionHistory.Enqueue(transform.position);
         rotationHistory.Enqueue(transform.rotation);
@@ -152,21 +189,20 @@ public class DroneControl : MonoBehaviour
         // Generate noise scaled by the magnitude of the movement. This makes the noise effect more pronounced
         // during faster movements and more subtle during slower movements.
         Vector3 noise = new Vector3(
-            Random.Range(-noiseStrength, noiseStrength) * movementMagnitude,
-            Random.Range(-noiseStrength, noiseStrength) * movementMagnitude,
-            Random.Range(-noiseStrength, noiseStrength) * movementMagnitude
+            UnityEngine.Random.Range(-noiseStrength, noiseStrength) * movementMagnitude,
+            UnityEngine.Random.Range(-noiseStrength, noiseStrength) * movementMagnitude,
+            UnityEngine.Random.Range(-noiseStrength, noiseStrength) * movementMagnitude
         );
 
         // Apply the scaled noise to the velocity, adding it to the desired movement
         body.velocity = desiredMovement + noise;
     }
 
-
     private void UpdateTargetPositionWithNoise()
     {
-        float noiseX = Random.Range(-noiseStrength, noiseStrength);
-        float noiseY = Random.Range(-noiseStrength, noiseStrength);
-        float noiseZ = Random.Range(-noiseStrength, noiseStrength);
+        float noiseX = UnityEngine.Random.Range(-noiseStrength, noiseStrength);
+        float noiseY = UnityEngine.Random.Range(-noiseStrength, noiseStrength);
+        float noiseZ = UnityEngine.Random.Range(-noiseStrength, noiseStrength);
 
         targetPosition += new Vector3(noiseX, noiseY, noiseZ);
     }
@@ -179,6 +215,42 @@ public class DroneControl : MonoBehaviour
 
     private void UpdateNoiseTime()
     {
-        nextNoiseTime = Time.time + Random.Range(noiseFrequencyRange.x, noiseFrequencyRange.y);
+        nextNoiseTime = Time.time + UnityEngine.Random.Range(noiseFrequencyRange.x, noiseFrequencyRange.y);
+    }
+
+    public void StartInputLogging(string filePath)
+    {
+        inputLogger = new StreamWriter(filePath);
+        inputLogger.WriteLine("Timestamp,DateTime,Countdown,RightStickX,RightStickY,LeftStickX,LeftStickY,DpadUp,DpadDown,SouthButton");
+        isLogging = true;
+    }
+
+    public void StopInputLogging()
+    {
+        isLogging = false;
+        if (inputLogger != null)
+        {
+            inputLogger.Close();
+            inputLogger = null;
+        }
+    }
+
+    private void LogInput()
+    {
+        DateTime dateTime = DateTime.UtcNow;
+        string timestamp = dateTime.ToString("yyyy-MM-dd HH:mm:ss.fff");
+
+        Vector2 rightStickValues = rightstick.action.ReadValue<Vector2>();
+        Vector2 leftStickValues = leftstick.action.ReadValue<Vector2>();
+        float dpadUpValue = dpadup.action.ReadValue<float>();
+        float dpadDownValue = dpaddown.action.ReadValue<float>();
+        bool southButtonState = southbutton.action.ReadValue<float>() > 0;
+
+        inputLogger.WriteLine($"{timestamp},{dateTime:yyyy-MM-dd HH:mm:ss.fff},{currentCountdown},{rightStickValues.x},{rightStickValues.y},{leftStickValues.x},{leftStickValues.y},{dpadUpValue},{dpadDownValue},{southButtonState}");
+    }
+
+    public void UpdateCountdownValue(float countdownValue)
+    {
+        currentCountdown = countdownValue;
     }
 }

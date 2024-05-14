@@ -4,6 +4,7 @@ using UnityEngine.UI;
 using TMPro;
 using UnityEngine.InputSystem;
 using System.Collections.Generic;
+using Tobii.Research.Unity;
 
 public class Timer : MonoBehaviour
 {
@@ -38,8 +39,6 @@ public class Timer : MonoBehaviour
 
     private int screenshotCount = 0;
 
-    // Inside Timer class
-
     public int totalCollisions = 0;
     public float collisionPercentage = 0f;
 
@@ -49,12 +48,10 @@ public class Timer : MonoBehaviour
         collisionPercentage = percentage;
     }
 
-    // Inside Timer class
     public void UpdateCountdownTime(float newCountdownTime)
     {
         countdownTime = newCountdownTime;
     }
-
 
     void Start()
     {
@@ -72,6 +69,9 @@ public class Timer : MonoBehaviour
             {
                 timeRemaining -= Time.deltaTime;
                 UpdateTimerDisplay(timeRemaining);
+                GazeTrail.Instance?.UpdateCountdownValue(timeRemaining); // Update countdown value in GazeTrail
+                DronePathRecorder.Instance?.UpdateCountdownValue(timeRemaining); // Update countdown value in DronePathRecorder
+                DroneControl.Instance?.UpdateCountdownValue(timeRemaining); // Update countdown value in DroneControl
                 LogInput();
             }
             else
@@ -90,6 +90,9 @@ public class Timer : MonoBehaviour
             menu.SetActive(false);
             sessionStartTime = Time.time;  // Store the start time
             StartLogging();
+            StartGazeRecording(); // Start recording gaze data
+            StartDronePathRecording(); // Start recording drone path data
+            StartInputLogging(); // Start recording input data
         }
     }
 
@@ -156,8 +159,6 @@ public class Timer : MonoBehaviour
         previousSouthButtonState = currentSouthButtonState;
     }
 
-
-
     private void UpdateInputSummary(string inputName, Vector2 inputValues)
     {
         if (inputValues != Vector2.zero)
@@ -182,8 +183,10 @@ public class Timer : MonoBehaviour
         UpdateTimerDisplay(0);
         menu.SetActive(true);
         FinalizeLogging();
+        StopGazeRecording(); // Stop recording gaze data
+        StopDronePathRecording(); // Stop recording drone path data
+        StopInputLogging(); // Stop recording input data
     }
-
 
     private void FinalizeLogging()
     {
@@ -222,6 +225,9 @@ public class Timer : MonoBehaviour
     private void OnApplicationQuit()
     {
         FinalizeLogging(); // Ensures all logs are properly closed when application quits
+        StopGazeRecording(); // Stop recording gaze data
+        StopDronePathRecording(); // Stop recording drone path data
+        StopInputLogging(); // Stop recording input data
     }
 
     private void UpdateTimerDisplay(float timeToDisplay)
@@ -248,4 +254,60 @@ public class Timer : MonoBehaviour
         Debug.Log($"Screenshot taken: {screenshotPath}");
     }
 
+    private void StartGazeRecording()
+    {
+        if (GazeTrail.Instance != null)
+        {
+            string folderPath = Path.Combine(Application.dataPath, "Data");
+            Directory.CreateDirectory(folderPath); // Create directory if it doesn't exist
+            string filePath = Path.Combine(folderPath, $"GazeData_{participantIDInput.text}_{environmentDropdown.options[environmentDropdown.value].text}_{strategyDropdown.options[strategyDropdown.value].text}.csv");
+            GazeTrail.Instance.StartRecording(filePath);
+        }
+    }
+
+    private void StopGazeRecording()
+    {
+        if (GazeTrail.Instance != null)
+        {
+            GazeTrail.Instance.StopRecording();
+        }
+    }
+
+    private void StartDronePathRecording()
+    {
+        if (DronePathRecorder.Instance != null)
+        {
+            string folderPath = Path.Combine(Application.dataPath, "Data");
+            Directory.CreateDirectory(folderPath); // Create directory if it doesn't exist
+            string filePath = Path.Combine(folderPath, $"PathData_{participantIDInput.text}_{environmentDropdown.options[environmentDropdown.value].text}_{strategyDropdown.options[strategyDropdown.value].text}.csv");
+            DronePathRecorder.Instance.StartRecording(filePath);
+        }
+    }
+
+    private void StopDronePathRecording()
+    {
+        if (DronePathRecorder.Instance != null)
+        {
+            DronePathRecorder.Instance.StopRecording();
+        }
+    }
+
+    private void StartInputLogging()
+    {
+        if (DroneControl.Instance != null)
+        {
+            string folderPath = Path.Combine(Application.dataPath, "Data");
+            Directory.CreateDirectory(folderPath); // Create directory if it doesn't exist
+            string filePath = Path.Combine(folderPath, $"GamepadInputLog_{participantIDInput.text}_{environmentDropdown.options[environmentDropdown.value].text}_{strategyDropdown.options[strategyDropdown.value].text}.csv");
+            DroneControl.Instance.StartInputLogging(filePath);
+        }
+    }
+
+    private void StopInputLogging()
+    {
+        if (DroneControl.Instance != null)
+        {
+            DroneControl.Instance.StopInputLogging();
+        }
+    }
 }

@@ -6,6 +6,7 @@ public class DroneCollisionDetector : MonoBehaviour
     private int collisionCount = 0;
     private float totalCollisionTime = 0f;
     private const float CollisionIncrement = 1f; // Fixed time increment per collision
+    private bool isColliding = false; // Track if a collision is ongoing
 
     public Timer timerScript; // Reference to Timer script
 
@@ -13,17 +14,30 @@ public class DroneCollisionDetector : MonoBehaviour
     {
         if (collision.gameObject.CompareTag("environment"))
         {
-            collisionCount++;
-            totalCollisionTime += CollisionIncrement; // Increment the total collision time by a fixed amount
-            VibrateGamepad();
-            Debug.Log("Collision Enter Detected");
+            if (!isColliding)
+            {
+                collisionCount++;
+                isColliding = true;
+                VibrateGamepad();
+                Debug.Log("Collision Enter Detected");
+            }
+        }
+    }
+
+    private void OnCollisionStay(Collision collision)
+    {
+        if (collision.gameObject.CompareTag("environment"))
+        {
+            totalCollisionTime += CollisionIncrement * Time.deltaTime; // Increment based on time delta
         }
     }
 
     private void OnCollisionExit(Collision collision)
     {
-        // Optionally, you can handle any specific logic when collision exits, if necessary.
-        Debug.Log("Collision Exit Detected");
+        if (collision.gameObject.CompareTag("environment"))
+        {
+            isColliding = false;
+        }
     }
 
     private void OnDestroy()
