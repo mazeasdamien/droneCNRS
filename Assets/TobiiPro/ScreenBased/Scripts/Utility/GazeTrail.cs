@@ -66,14 +66,13 @@ namespace Tobii.Research.Unity
             if (data.CombinedGazeRayScreenValid)
             {
                 // Use the GazePointOnDisplayArea data (normalized values)
-                Vector2 gazePointOnDisplay = new Vector2(data.Left.GazePointOnDisplayArea.x, data.Left.GazePointOnDisplayArea.y);
+                Vector2 gazePointOnDisplay = new(data.Left.GazePointOnDisplayArea.x, data.Left.GazePointOnDisplayArea.y);
 
                 // Convert normalized coordinates to screen coordinates
-                Vector2 gazePosition = new Vector2(gazePointOnDisplay.x * Screen.width, (1 - gazePointOnDisplay.y) * Screen.height);
+                Vector2 gazePosition = new(gazePointOnDisplay.x * Screen.width, (1 - gazePointOnDisplay.y) * Screen.height);
 
                 // Convert screen coordinates to local coordinates
-                Vector2 localPosition;
-                RectTransformUtility.ScreenPointToLocalPointInRectangle(gazeCursor.canvas.transform as RectTransform, gazePosition, Camera.main, out localPosition);
+                RectTransformUtility.ScreenPointToLocalPointInRectangle(gazeCursor.canvas.transform as RectTransform, gazePosition, Camera.main, out Vector2 localPosition);
 
                 // Update the position of the gazeCursor
                 gazeCursor.rectTransform.anchoredPosition = localPosition;
@@ -96,10 +95,10 @@ namespace Tobii.Research.Unity
             string timestamp = dateTime.ToString("yyyy-MM-dd HH:mm:ss.fff");
 
             // Retrieve normalized gaze point
-            Vector2 gazePointOnDisplay = new Vector2(data.Left.GazePointOnDisplayArea.x, data.Left.GazePointOnDisplayArea.y);
+            Vector2 gazePointOnDisplay = new(data.Left.GazePointOnDisplayArea.x, data.Left.GazePointOnDisplayArea.y);
 
             // Convert normalized coordinates to pixel coordinates (1920x1080)
-            Vector2 gazePointInPixels = new Vector2(gazePointOnDisplay.x * 1920, (1 - gazePointOnDisplay.y) * 1080);
+            Vector2 gazePointInPixels = new(gazePointOnDisplay.x * 1920, (1 - gazePointOnDisplay.y) * 1080);
 
             // Pupil data and validity
             bool validLeftGaze = data.Left.GazePointValid;
@@ -158,7 +157,7 @@ namespace Tobii.Research.Unity
         {
             get
             {
-                return _calibrationObject != null ? _calibrationObject.CalibrationInProgress : false;
+                return _calibrationObject != null && _calibrationObject.CalibrationInProgress;
             }
         }
     }

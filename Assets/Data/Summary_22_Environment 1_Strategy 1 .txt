@@ -1,0 +1,7 @@
+LeftStick was used for a total of 24.94873 seconds.
+RightStick was used for a total of 49.82337 seconds.
+DPadDown was used for a total of 2.601955 seconds.
+SouthButton was pressed 2 times.
+DPadUp was used for a total of 2.460765 seconds.
+Total Collisions: 5
+Collision Percentage of Countdown Time: 55.13428%

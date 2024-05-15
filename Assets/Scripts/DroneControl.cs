@@ -158,15 +158,16 @@ public class DroneControl : MonoBehaviour
 
     private void HandleInput()
     {
-        _verticalMovement = leftstick.action.ReadValue<Vector2>().y;
-        float rotation = leftstick.action.ReadValue<Vector2>().x * rotationSpeed * Time.deltaTime;
+        _verticalMovement = leftstick?.action?.ReadValue<Vector2>().y ?? 0f;
+        float rotation = leftstick?.action?.ReadValue<Vector2>().x ?? 0f;
+        rotation *= rotationSpeed * Time.deltaTime;
 
         transform.Rotate(0, rotation, 0, Space.World);
         // Right stick functionality for other purposes goes here
         // For example, if right stick controls movement as well, it should be processed here.
-        _rightStickInput = rightstick.action.ReadValue<Vector2>(); // This allows for right stick input processing for movement or other actions
+        _rightStickInput = rightstick?.action?.ReadValue<Vector2>() ?? Vector2.zero; // This allows for right stick input processing for movement or other actions
 
-        float dpadVertical = dpadup.action.ReadValue<float>() - dpaddown.action.ReadValue<float>();
+        float dpadVertical = (dpadup?.action?.ReadValue<float>() ?? 0f) - (dpaddown?.action?.ReadValue<float>() ?? 0f);
 
         float cameraRotationX = cameraRotationSpeed * Time.deltaTime * dpadVertical;
         float newRotationX = Mathf.Clamp(cam.localEulerAngles.x - cameraRotationX, 0, 90);
@@ -240,11 +241,11 @@ public class DroneControl : MonoBehaviour
         DateTime dateTime = DateTime.UtcNow;
         string timestamp = dateTime.ToString("yyyy-MM-dd HH:mm:ss.fff");
 
-        Vector2 rightStickValues = rightstick.action.ReadValue<Vector2>();
-        Vector2 leftStickValues = leftstick.action.ReadValue<Vector2>();
-        float dpadUpValue = dpadup.action.ReadValue<float>();
-        float dpadDownValue = dpaddown.action.ReadValue<float>();
-        bool southButtonState = southbutton.action.ReadValue<float>() > 0;
+        Vector2 rightStickValues = rightstick?.action?.ReadValue<Vector2>() ?? Vector2.zero;
+        Vector2 leftStickValues = leftstick?.action?.ReadValue<Vector2>() ?? Vector2.zero;
+        float dpadUpValue = dpadup?.action?.ReadValue<float>() ?? 0f;
+        float dpadDownValue = dpaddown?.action?.ReadValue<float>() ?? 0f;
+        bool southButtonState = southbutton?.action?.ReadValue<float>() > 0f;
 
         inputLogger.WriteLine($"{timestamp},{dateTime:yyyy-MM-dd HH:mm:ss.fff},{currentCountdown},{rightStickValues.x},{rightStickValues.y},{leftStickValues.x},{leftStickValues.y},{dpadUpValue},{dpadDownValue},{southButtonState}");
     }
