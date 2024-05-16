@@ -38,6 +38,7 @@ public class DroneControl : MonoBehaviour
     public GameObject originObject; // Reference to the origin GameObject
 
     private Vector2 _rightStickInput;
+    private Vector2 _leftStickInput;
     private float _verticalMovement;
     private bool isDroneMoving = false;
     private float movementThreshold = 0.1f;
@@ -77,6 +78,13 @@ public class DroneControl : MonoBehaviour
         {
             DronePathRecorder.Instance.Initialize(originObject, transform);
         }
+
+        // Enable input actions
+        rightstick?.action?.Enable();
+        leftstick?.action?.Enable();
+        dpadup?.action?.Enable();
+        dpaddown?.action?.Enable();
+        southbutton?.action?.Enable();
     }
 
     private void Update()
@@ -158,20 +166,40 @@ public class DroneControl : MonoBehaviour
 
     private void HandleInput()
     {
-        _verticalMovement = leftstick?.action?.ReadValue<Vector2>().y ?? 0f;
-        float rotation = leftstick?.action?.ReadValue<Vector2>().x ?? 0f;
-        rotation *= rotationSpeed * Time.deltaTime;
+        // Handle gamepad input
+        _leftStickInput = leftstick?.action?.ReadValue<Vector2>() ?? Vector2.zero;
+        _rightStickInput = rightstick?.action?.ReadValue<Vector2>() ?? Vector2.zero;
+        _verticalMovement = _leftStickInput.y;
 
+        //Debug.Log($"Right Stick Input: {_rightStickInput}");
+        //Debug.Log($"Left Stick Input: {_leftStickInput}");
+
+        float rotation = _leftStickInput.x * rotationSpeed * Time.deltaTime;
         transform.Rotate(0, rotation, 0, Space.World);
-        // Right stick functionality for other purposes goes here
-        // For example, if right stick controls movement as well, it should be processed here.
-        _rightStickInput = rightstick?.action?.ReadValue<Vector2>() ?? Vector2.zero; // This allows for right stick input processing for movement or other actions
 
         float dpadVertical = (dpadup?.action?.ReadValue<float>() ?? 0f) - (dpaddown?.action?.ReadValue<float>() ?? 0f);
-
         float cameraRotationX = cameraRotationSpeed * Time.deltaTime * dpadVertical;
         float newRotationX = Mathf.Clamp(cam.localEulerAngles.x - cameraRotationX, 0, 90);
         cam.localEulerAngles = new Vector3(newRotationX, cam.localEulerAngles.y, cam.localEulerAngles.z);
+
+        // Handle keyboard input only if gamepad input is not detected
+        if (_leftStickInput == Vector2.zero && _rightStickInput == Vector2.zero)
+        {
+            _rightStickInput.y = (Keyboard.current.wKey.isPressed ? 1f : 0f) - (Keyboard.current.sKey.isPressed ? 1f : 0f);
+            _rightStickInput.x = (Keyboard.current.dKey.isPressed ? 1f : 0f) - (Keyboard.current.aKey.isPressed ? 1f : 0f);
+
+            _verticalMovement = (Keyboard.current.rKey.isPressed ? 1f : 0f) - (Keyboard.current.fKey.isPressed ? 1f : 0f);
+
+            float keyboardRotation = (Keyboard.current.qKey.isPressed ? -1f : 0f) + (Keyboard.current.eKey.isPressed ? 1f : 0f);
+            keyboardRotation *= rotationSpeed * Time.deltaTime;
+            transform.Rotate(0, keyboardRotation, 0, Space.World);
+
+            // Handle D-pad up/down using arrow keys
+            dpadVertical += (Keyboard.current.upArrowKey.isPressed ? 1f : 0f) - (Keyboard.current.downArrowKey.isPressed ? 1f : 0f);
+            cameraRotationX = cameraRotationSpeed * Time.deltaTime * dpadVertical;
+            newRotationX = Mathf.Clamp(cam.localEulerAngles.x - cameraRotationX, 0, 90);
+            cam.localEulerAngles = new Vector3(newRotationX, cam.localEulerAngles.y, cam.localEulerAngles.z);
+        }
     }
 
     private void ApplyMovement()
@@ -184,19 +212,33 @@ public class DroneControl : MonoBehaviour
         // Calculate total desired movement without noise
         Vector3 desiredMovement = localForwardBackward + localLeftRight + verticalMove;
 
-        // Determine the magnitude of the desired movement to scale the noise accordingly
-        float movementMagnitude = desiredMovement.magnitude;
+        // Only apply noise if no input is detected
+        Vector3 finalVelocity;
+        if (_rightStickInput == Vector2.zero && _leftStickInput == Vector2.zero && _verticalMovement == 0)
+        {
+            // Determine the magnitude of the desired movement to scale the noise accordingly
+            float movementMagnitude = desiredMovement.magnitude;
 
-        // Generate noise scaled by the magnitude of the movement. This makes the noise effect more pronounced
-        // during faster movements and more subtle during slower movements.
-        Vector3 noise = new Vector3(
-            UnityEngine.Random.Range(-noiseStrength, noiseStrength) * movementMagnitude,
-            UnityEngine.Random.Range(-noiseStrength, noiseStrength) * movementMagnitude,
-            UnityEngine.Random.Range(-noiseStrength, noiseStrength) * movementMagnitude
-        );
+            // Generate noise scaled by the magnitude of the movement. This makes the noise effect more pronounced
+            // during faster movements and more subtle during slower movements.
+            Vector3 noise = new Vector3(
+                UnityEngine.Random.Range(-noiseStrength, noiseStrength) * movementMagnitude,
+                UnityEngine.Random.Range(-noiseStrength, noiseStrength) * movementMagnitude,
+                UnityEngine.Random.Range(-noiseStrength, noiseStrength) * movementMagnitude
+            );
 
-        // Apply the scaled noise to the velocity, adding it to the desired movement
-        body.velocity = desiredMovement + noise;
+            finalVelocity = desiredMovement + noise;
+        }
+        else
+        {
+            finalVelocity = desiredMovement;
+        }
+
+        // Apply the calculated velocity to the Rigidbody
+        body.velocity = finalVelocity;
+        //
+        //Debug.Log($"Applying Movement: {finalVelocity}");
+        //Debug.Log($"Rigidbody Velocity: {body.velocity}");
     }
 
     private void UpdateTargetPositionWithNoise()

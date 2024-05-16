@@ -3,12 +3,11 @@ using UnityEngine;
 
 public class DelayedFollow : MonoBehaviour
 {
-    public Transform targetDrone;
+    public Transform targetDrone; // Explorer drone
+    public Transform masterTargetPosition; // Master target position
     public float delay = 1.0f;
     public float followSpeed = 2.0f;
     public float rotationSpeed = 0.5f;
-    public float verticalOffset = 5.0f;
-    public float horizontalOffset = -3.0f; // Added horizontal offset
     public float raycastDistance = 2.0f; // Distance to check for obstacles
     public float ascendSpeed = 1.0f; // Speed at which the drone ascends to avoid obstacles
 
@@ -25,8 +24,9 @@ public class DelayedFollow : MonoBehaviour
 
     void Update()
     {
-        // Record the current position, rotation, and time of the target drone with an X offset
-        history.Enqueue((targetDrone.position + Vector3.up * verticalOffset + Vector3.right * horizontalOffset, targetDrone.rotation, Time.time));
+        // Record the current position, rotation, and time of the master target position without any offsets
+        Vector3 targetPosition = masterTargetPosition.position;
+        history.Enqueue((targetPosition, targetDrone.rotation, Time.time));
 
         // Remove old records while the timestamp is out of the delay range
         while (history.Count > 0 && history.Peek().time < Time.time - delay)
@@ -37,7 +37,7 @@ public class DelayedFollow : MonoBehaviour
         // If there are records in the history, move and rotate towards the oldest record (from ~1 second ago)
         if (history.Count > 0)
         {
-            var (targetPosition, targetRotation, _) = history.Peek();
+            var (recordedPosition, recordedRotation, _) = history.Peek();
 
             // When avoiding obstacles, ignore the Y-axis position from the target
             if (isAvoidingObstacle)
@@ -45,16 +45,16 @@ public class DelayedFollow : MonoBehaviour
                 // Keep the current Y position
                 float currentY = transform.position.y;
                 // Lerp only X and Z position
-                Vector3 positionXZ = new Vector3(targetPosition.x, currentY, targetPosition.z);
+                Vector3 positionXZ = new Vector3(recordedPosition.x, currentY, recordedPosition.z);
                 transform.position = Vector3.Lerp(transform.position, positionXZ, followSpeed * Time.deltaTime);
             }
             else
             {
                 // Follow target position including Y-axis
-                transform.position = Vector3.Lerp(transform.position, targetPosition, followSpeed * Time.deltaTime);
+                transform.position = Vector3.Lerp(transform.position, recordedPosition, followSpeed * Time.deltaTime);
             }
 
-            transform.rotation = Quaternion.Lerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
+            transform.rotation = Quaternion.Lerp(transform.rotation, recordedRotation, rotationSpeed * Time.deltaTime);
         }
     }
 }

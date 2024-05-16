@@ -12,9 +12,6 @@ public class StrategiesManager : MonoBehaviour
         Strategy3,
         Strategy4
     }
-
-    public GameObject LOW;
-    public GameObject HIGH;
     public GameObject masterDrone;
     public Camera targetCamera;
 
@@ -65,7 +62,7 @@ public class StrategiesManager : MonoBehaviour
 
     private void ApplyStrategy()
     {
-        if (targetCamera == null || masterDrone == null || LOW == null || HIGH == null)
+        if (targetCamera == null || masterDrone == null)
         {
             Debug.LogError("One or more GameObject references are not set in the StrategiesManager.");
             return;
@@ -89,8 +86,6 @@ public class StrategiesManager : MonoBehaviour
                 break;
             case Strategy.Strategy3:
                 masterDrone.SetActive(false);
-                LOW.SetActive(true);
-                HIGH.SetActive(false);
                 S1.SetActive(false);
                 S2.SetActive(false);
                 S3.SetActive(true);
@@ -98,8 +93,6 @@ public class StrategiesManager : MonoBehaviour
                 break;
             case Strategy.Strategy4:
                 masterDrone.SetActive(false);
-                LOW.SetActive(false);
-                HIGH.SetActive(true);
                 S1.SetActive(false);
                 S2.SetActive(false);
                 S3.SetActive(false);

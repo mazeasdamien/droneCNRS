@@ -1,8 +1,8 @@
 ﻿using System;
 using System.IO;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
 
 namespace Tobii.Research.Unity
 {
@@ -18,11 +18,18 @@ namespace Tobii.Research.Unity
         private Image gazeCursor;
         [SerializeField]
         private TextMeshProUGUI gazeText;
+        [SerializeField]
+        private TMP_InputField participantIDInput;
+        [SerializeField]
+        private Button startButton;
+        [SerializeField]
+        private RawImage blackScreen; // Reference to the black screen RawImage
 
         // StreamWriter for recording gaze data
         private StreamWriter gazeWriter;
         private bool isRecording = false;
         private float currentCountdown = 0f; // Variable to store the current countdown value
+        private bool isBaselineStart = true; // Track whether it is the start or end baseline
 
         protected override void OnAwake()
         {
@@ -46,6 +53,25 @@ namespace Tobii.Research.Unity
             {
                 Debug.LogError("GazeText is not assigned in the inspector.");
             }
+
+            // Ensure participantIDInput and startButton are assigned
+            if (participantIDInput == null)
+            {
+                Debug.LogError("ParticipantIDInput is not assigned in the inspector.");
+            }
+
+            if (startButton == null)
+            {
+                Debug.LogError("StartButton is not assigned in the inspector.");
+            }
+
+            if (blackScreen == null)
+            {
+                Debug.LogError("BlackScreen is not assigned in the inspector.");
+            }
+
+            // Add listener to the start button
+            startButton.onClick.AddListener(OnStartButtonClick);
         }
 
         private void Update()
@@ -131,6 +157,44 @@ namespace Tobii.Research.Unity
         public void UpdateCountdownValue(float countdownValue)
         {
             currentCountdown = countdownValue;
+        }
+
+        private void OnStartButtonClick()
+        {
+            string participantID = participantIDInput.text;
+            if (string.IsNullOrEmpty(participantID))
+            {
+                Debug.LogError("Participant ID is empty.");
+                return;
+            }
+
+            string fileSuffix = isBaselineStart ? "start" : "end";
+            string folderPath = Path.Combine(Application.dataPath, "Data");
+
+            // Ensure the folder exists
+            if (!Directory.Exists(folderPath))
+            {
+                Directory.CreateDirectory(folderPath);
+            }
+
+            string filePath = Path.Combine(folderPath, $"baseline_{participantID}_{fileSuffix}.csv");
+
+            // Show the black screen
+            blackScreen.gameObject.SetActive(true);
+
+            StartRecording(filePath);
+            Invoke(nameof(StopRecordingAndHideBlackScreen), 60f); // Record for 60 seconds
+        }
+
+        private void StopRecordingAndHideBlackScreen()
+        {
+            StopRecording();
+
+            // Hide the black screen
+            blackScreen.gameObject.SetActive(false);
+
+            // Toggle baseline start/end
+            isBaselineStart = !isBaselineStart;
         }
 
         protected override bool GetRay(out Ray ray)
