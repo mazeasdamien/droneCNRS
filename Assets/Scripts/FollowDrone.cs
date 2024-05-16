@@ -4,12 +4,18 @@ using UnityEngine.UI;
 
 public class FollowDrone : MonoBehaviour
 {
+    public static FollowDrone Instance { get; private set; } // Singleton instance
     public Transform droneTransform;
     public RawImage rawImage;
     public Camera mainCamera;
     public LineRenderer lineRenderer;
 
     private List<Vector3> positions = new List<Vector3>();  // List to store positions
+
+    void Awake()
+    {
+        Instance = this; // Assign the singleton instance
+    }
 
     void Start()
     {

@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using UnityEngine.InputSystem;
+using System.Collections;
 using System.Collections.Generic;
 using Tobii.Research.Unity;
 
@@ -15,7 +16,6 @@ public class Timer : MonoBehaviour
 
     private float timeRemaining;
     private bool timerIsRunning = false;
-    private StreamWriter writer;
     private StreamWriter summaryWriter;
 
     [Header("Input References")]
@@ -31,6 +31,13 @@ public class Timer : MonoBehaviour
     public TMP_InputField participantIDInput;
     public TMP_Dropdown environmentDropdown;
     public TMP_Dropdown strategyDropdown;
+
+    // New fields for the screenshot prefab and canvas
+    public GameObject screenshotPrefab;
+    public Canvas screenshotCanvas;
+
+    // New field for the screenshot message
+    public TextMeshProUGUI screenshotMessageText;
 
     private Dictionary<string, (float duration, int count)> inputSummary = new Dictionary<string, (float duration, int count)>();
     private bool isLoggingStarted = false; // Add this at the class level
@@ -59,6 +66,7 @@ public class Timer : MonoBehaviour
         recordButton.onClick.AddListener(StartLogging);
         timeRemaining = countdownTime;
         UpdateTimerDisplay(timeRemaining);
+        screenshotMessageText.gameObject.SetActive(false); // Hide the message at the start
     }
 
     void Update()
@@ -102,7 +110,6 @@ public class Timer : MonoBehaviour
         {
             isLoggingStarted = true; // Set to true to avoid multiple logs
             InitializeWriters();
-            writer.WriteLine($"Logging Start for Participant: {participantIDInput.text}, Environment: {environmentDropdown.options[environmentDropdown.value].text}, Strategy: {strategyDropdown.options[strategyDropdown.value].text}");
         }
     }
 
@@ -110,14 +117,6 @@ public class Timer : MonoBehaviour
     {
         string folderPath = Path.Combine(Application.dataPath, "Data");
         Directory.CreateDirectory(folderPath); // This will only create if not exist
-
-        if (writer != null)
-        {
-            writer.Close();
-        }
-        string logFileName = $"Log_{participantIDInput.text}_{environmentDropdown.options[environmentDropdown.value].text}_{strategyDropdown.options[strategyDropdown.value].text}.txt";
-        writer = new StreamWriter(Path.Combine(folderPath, logFileName), true);
-        writer.WriteLine($"Unity Time Before Countdown: {sessionStartTime}s");
 
         if (summaryWriter != null)
         {
@@ -138,10 +137,6 @@ public class Timer : MonoBehaviour
         // Check if any input has occurred
         if (leftStickValues != Vector2.zero || rightStickValues != Vector2.zero || dpadUpValue != 0 || dpadDownValue != 0 || currentSouthButtonState != previousSouthButtonState)
         {
-            // Log the input with Unity time
-            string inputLog = $"Unity Time: {Time.time}s, Time Remaining: {Mathf.FloorToInt(timeRemaining / 60):00}:{Mathf.FloorToInt(timeRemaining % 60):00}, Left Stick: {leftStickValues}, Right Stick: {rightStickValues}, D-Pad Up: {dpadUpValue}, D-Pad Down: {dpadDownValue}, South Button: {currentSouthButtonState}";
-            writer.WriteLine(inputLog);
-
             // Update the summary for input usage
             UpdateInputSummary("LeftStick", leftStickValues);
             UpdateInputSummary("RightStick", rightStickValues);
@@ -190,13 +185,6 @@ public class Timer : MonoBehaviour
 
     private void FinalizeLogging()
     {
-        if (writer != null)
-        {
-            writer.WriteLine("Logging Session Ended");
-            writer.Close();
-            writer = null;
-        }
-
         if (summaryWriter != null)
         {
             foreach (var item in inputSummary)
@@ -252,6 +240,32 @@ public class Timer : MonoBehaviour
         ScreenCapture.CaptureScreenshot(screenshotPath);
 
         Debug.Log($"Screenshot taken: {screenshotPath}");
+
+        // Instantiate the prefab at the rawImage position
+        InstantiatePrefabAtRawImagePosition();
+
+        // Start coroutine to display screenshot message
+        StartCoroutine(DisplayScreenshotMessage());
+    }
+
+    private void InstantiatePrefabAtRawImagePosition()
+    {
+        if (screenshotPrefab != null && screenshotCanvas != null)
+        {
+            // Instantiate the prefab
+            GameObject instantiatedPrefab = Instantiate(screenshotPrefab, screenshotCanvas.transform);
+
+            // Position the instantiated prefab at the rawImage position
+            RectTransform rawImageRect = FollowDrone.Instance.rawImage.rectTransform;
+            instantiatedPrefab.GetComponent<RectTransform>().anchoredPosition = rawImageRect.anchoredPosition;
+        }
+    }
+
+    private IEnumerator DisplayScreenshotMessage()
+    {
+        screenshotMessageText.gameObject.SetActive(true);
+        yield return new WaitForSeconds(3);
+        screenshotMessageText.gameObject.SetActive(false);
     }
 
     private void StartGazeRecording()

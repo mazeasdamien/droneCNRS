@@ -8,6 +8,7 @@ namespace Tobii.Research.Unity
 {
     public class GazeTrail : GazeTrailBase
     {
+        public string panelNameLooked;
         public static GazeTrail Instance { get; private set; }
 
         private EyeTracker _eyeTracker;
@@ -24,6 +25,10 @@ namespace Tobii.Research.Unity
         private Button startButton;
         [SerializeField]
         private RawImage blackScreen; // Reference to the black screen RawImage
+        [SerializeField]
+        private TMP_Dropdown strategyDropdown; // Reference to the strategy dropdown
+        [SerializeField]
+        private TextMeshProUGUI lookedAtText; // Reference to the TMP_Text element for displaying the looked-at panel
 
         // StreamWriter for recording gaze data
         private StreamWriter gazeWriter;
@@ -70,6 +75,16 @@ namespace Tobii.Research.Unity
                 Debug.LogError("BlackScreen is not assigned in the inspector.");
             }
 
+            if (strategyDropdown == null)
+            {
+                Debug.LogError("StrategyDropdown is not assigned in the inspector.");
+            }
+
+            if (lookedAtText == null)
+            {
+                Debug.LogError("LookedAtText is not assigned in the inspector.");
+            }
+
             // Add listener to the start button
             startButton.onClick.AddListener(OnStartButtonClick);
         }
@@ -105,10 +120,82 @@ namespace Tobii.Research.Unity
 
                 // Display the gaze values in the TextMeshPro element
                 gazeText.text = $"Gaze Position: ({gazePosition.x}, {gazePosition.y})";
+
+                // Determine the panel looked at
+                DeterminePanelLooked(gazePosition);
             }
             else
             {
                 gazeText.text = "Gaze data not valid.";
+                panelNameLooked = "None";
+            }
+
+            // Update the looked-at text
+            lookedAtText.text = $"{panelNameLooked}";
+        }
+
+        private void DeterminePanelLooked(Vector2 gazePosition)
+        {
+            int strategy = strategyDropdown.value;
+            panelNameLooked = "None";
+
+            switch (strategy)
+            {
+                case 0: // Strategy1
+                    panelNameLooked = "FPV";
+                    break;
+                case 1: // Strategy2
+                    float panelHeight = 540f;
+                    float panelWidth = 960f;
+                    float leftBound = (Screen.width - panelWidth) / 2;
+                    float rightBound = leftBound + panelWidth;
+
+                    if (gazePosition.x >= leftBound && gazePosition.x <= rightBound)
+                    {
+                        if (gazePosition.y >= (Screen.height - panelHeight) / 2 && gazePosition.y <= (Screen.height + panelHeight) / 2)
+                        {
+                            panelNameLooked = "TPV";
+                        }
+                        else if (gazePosition.y >= (Screen.height - panelHeight * 1.5f) / 2 && gazePosition.y <= (Screen.height - panelHeight / 2) / 2)
+                        {
+                            panelNameLooked = "FPV";
+                        }
+                    }
+                    break;
+                case 2: // Strategy3
+                    if (gazePosition.x < Screen.width / 2)
+                    {
+                        if (gazePosition.y > Screen.height / 2)
+                        {
+                            panelNameLooked = "VIRTUAL TPV LOW QUALITY";
+                        }
+                        else
+                        {
+                            panelNameLooked = "FPV";
+                        }
+                    }
+                    else
+                    {
+                        panelNameLooked = "MAP";
+                    }
+                    break;
+                case 3: // Strategy4
+                    if (gazePosition.x < Screen.width / 2)
+                    {
+                        if (gazePosition.y > Screen.height / 2)
+                        {
+                            panelNameLooked = "VIRTUAL TPV HIGH QUALITY";
+                        }
+                        else
+                        {
+                            panelNameLooked = "FPV";
+                        }
+                    }
+                    else
+                    {
+                        panelNameLooked = "MAP";
+                    }
+                    break;
             }
         }
 
@@ -134,13 +221,30 @@ namespace Tobii.Research.Unity
             float leftPupilDiameter = data.Left.PupilDiameter;
             float rightPupilDiameter = data.Right.PupilDiameter;
 
-            gazeWriter.WriteLine($"{timestamp},{dateTime:yyyy-MM-dd HH:mm:ss.fff},{currentCountdown},{validLeftGaze},{validRightGaze},{gazePointOnDisplay.x},{gazePointOnDisplay.y},{gazePointInPixels.x},{gazePointInPixels.y},{validLeftPupil},{leftPupilDiameter},{validRightPupil},{rightPupilDiameter}");
+            // Additional eye-specific data
+            var leftGazeOriginInTrackBox = data.Left.GazeOriginInTrackBoxCoordinates;
+            var leftGazeOriginInUser = data.Left.GazeOriginInUserCoordinates;
+            var leftGazePointInUser = data.Left.GazePointInUserCoordinates;
+            var leftGazePointOnDisplayArea = data.Left.GazePointOnDisplayArea;
+            var leftGazeRayScreen = data.Left.GazeRayScreen;
+
+            var rightGazeOriginInTrackBox = data.Right.GazeOriginInTrackBoxCoordinates;
+            var rightGazeOriginInUser = data.Right.GazeOriginInUserCoordinates;
+            var rightGazePointInUser = data.Right.GazePointInUserCoordinates;
+            var rightGazePointOnDisplayArea = data.Right.GazePointOnDisplayArea;
+            var rightGazeRayScreen = data.Right.GazeRayScreen;
+
+            gazeWriter.WriteLine($"{timestamp},{dateTime:yyyy-MM-dd HH:mm:ss.fff},{currentCountdown},{validLeftGaze},{validRightGaze},{gazePointOnDisplay.x},{gazePointOnDisplay.y},{gazePointInPixels.x},{gazePointInPixels.y},{validLeftPupil},{leftPupilDiameter},{validRightPupil},{rightPupilDiameter}," +
+                                 $"{leftGazeOriginInTrackBox.x},{leftGazeOriginInTrackBox.y},{leftGazeOriginInTrackBox.z},{leftGazeOriginInUser.x},{leftGazeOriginInUser.y},{leftGazeOriginInUser.z},{leftGazePointInUser.x},{leftGazePointInUser.y},{leftGazePointInUser.z},{leftGazePointOnDisplayArea.x},{leftGazePointOnDisplayArea.y},{leftGazeRayScreen.origin.x},{leftGazeRayScreen.origin.y},{leftGazeRayScreen.origin.z},{leftGazeRayScreen.direction.x},{leftGazeRayScreen.direction.y},{leftGazeRayScreen.direction.z}," +
+                                 $"{rightGazeOriginInTrackBox.x},{rightGazeOriginInTrackBox.y},{rightGazeOriginInTrackBox.z},{rightGazeOriginInUser.x},{rightGazeOriginInUser.y},{rightGazeOriginInUser.z},{rightGazePointInUser.x},{rightGazePointInUser.y},{rightGazePointInUser.z},{rightGazePointOnDisplayArea.x},{rightGazePointOnDisplayArea.y},{rightGazeRayScreen.origin.x},{rightGazeRayScreen.origin.y},{rightGazeRayScreen.origin.z},{rightGazeRayScreen.direction.x},{rightGazeRayScreen.direction.y},{rightGazeRayScreen.direction.z},{panelNameLooked}");
         }
 
         public void StartRecording(string filePath)
         {
             gazeWriter = new StreamWriter(filePath);
-            gazeWriter.WriteLine("Timestamp,DateTime,Countdown,ValidLeftGaze,ValidRightGaze,X,Y,XPixels,YPixels,ValidLeftPupil,LeftPupilDiameter,ValidRightPupil,RightPupilDiameter");
+            gazeWriter.WriteLine("Timestamp,DateTime,Countdown,ValidLeftGaze,ValidRightGaze,X,Y,XPixels,YPixels,ValidLeftPupil,LeftPupilDiameter,ValidRightPupil,RightPupilDiameter," +
+                                 "LeftGazeOriginInTrackBoxCoordinatesX,LeftGazeOriginInTrackBoxCoordinatesY,LeftGazeOriginInTrackBoxCoordinatesZ,LeftGazeOriginInUserCoordinatesX,LeftGazeOriginInUserCoordinatesY,LeftGazeOriginInUserCoordinatesZ,LeftGazePointInUserCoordinatesX,LeftGazePointInUserCoordinatesY,LeftGazePointInUserCoordinatesZ,LeftGazePointOnDisplayAreaX,LeftGazePointOnDisplayAreaY,LeftGazeRayScreenOriginX,LeftGazeRayScreenOriginY,LeftGazeRayScreenOriginZ,LeftGazeRayScreenDirectionX,LeftGazeRayScreenDirectionY,LeftGazeRayScreenDirectionZ," +
+                                 "RightGazeOriginInTrackBoxCoordinatesX,RightGazeOriginInTrackBoxCoordinatesY,RightGazeOriginInTrackBoxCoordinatesZ,RightGazeOriginInUserCoordinatesX,RightGazeOriginInUserCoordinatesY,RightGazeOriginInUserCoordinatesZ,RightGazePointInUserCoordinatesX,RightGazePointInUserCoordinatesY,RightGazePointInUserCoordinatesZ,RightGazePointOnDisplayAreaX,RightGazePointOnDisplayAreaY,RightGazeRayScreenOriginX,RightGazeRayScreenOriginY,RightGazeRayScreenOriginZ,RightGazeRayScreenDirectionX,RightGazeRayScreenDirectionY,RightGazeRayScreenDirectionZ,PanelNameLooked");
             isRecording = true;
         }
 

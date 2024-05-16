@@ -1,10 +1,14 @@
 using UnityEngine;
 using TMPro; // Import TextMesh Pro namespace
 using Unity.VisualScripting;
+using System.Collections.Generic;
 
 [ExecuteInEditMode]
 public class StrategiesManager : MonoBehaviour
 {
+    public List<GameObject> High;
+    public List<GameObject> Low;
+
     public enum Strategy
     {
         Strategy1 = 1,
@@ -76,6 +80,14 @@ public class StrategiesManager : MonoBehaviour
                 S2.SetActive(false);
                 S3.SetActive(false);
                 S4.SetActive(false);
+                foreach (GameObject g in High)
+                {
+                    g.SetActive(false);
+                }
+                foreach (GameObject g in Low)
+                {
+                    g.SetActive(false);
+                }
                 break;
             case Strategy.Strategy2:
                 masterDrone.SetActive(true);
@@ -83,6 +95,14 @@ public class StrategiesManager : MonoBehaviour
                 S2.SetActive(true);
                 S3.SetActive(false);
                 S4.SetActive(false);
+                foreach (GameObject g in High)
+                {
+                    g.SetActive(false);
+                }
+                foreach (GameObject g in Low)
+                {
+                    g.SetActive(false);
+                }
                 break;
             case Strategy.Strategy3:
                 masterDrone.SetActive(false);
@@ -90,6 +110,14 @@ public class StrategiesManager : MonoBehaviour
                 S2.SetActive(false);
                 S3.SetActive(true);
                 S4.SetActive(false);
+                foreach (GameObject g in High)
+                {
+                    g.SetActive(false);
+                }
+                foreach (GameObject g in Low)
+                {
+                    g.SetActive(true);
+                }
                 break;
             case Strategy.Strategy4:
                 masterDrone.SetActive(false);
@@ -97,6 +125,14 @@ public class StrategiesManager : MonoBehaviour
                 S2.SetActive(false);
                 S3.SetActive(false);
                 S4.SetActive(true);
+                foreach (GameObject g in High)
+                {
+                    g.SetActive(true);
+                }
+                foreach (GameObject g in Low)
+                {
+                    g.SetActive(false);
+                }
                 break;
             default:
                 Debug.LogError("Unhandled strategy number.");
