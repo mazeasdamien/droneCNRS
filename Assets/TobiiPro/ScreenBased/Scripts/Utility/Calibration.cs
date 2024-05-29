@@ -5,6 +5,7 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 namespace Tobii.Research.Unity
 {
@@ -52,6 +53,9 @@ namespace Tobii.Research.Unity
 
         [SerializeField]
         private Image _panel;
+
+        [SerializeField]
+        private TextMeshProUGUI countdownText; // Reference to the TextMeshProUGUI for the countdown
 
         private CalibrationPoint _pointScript;
 
@@ -242,10 +246,25 @@ namespace Tobii.Research.Unity
 
         public void StartCalibration()
         {
+            StartCoroutine(StartCalibrationWithCountdown());
+        }
+
+        private IEnumerator StartCalibrationWithCountdown()
+        {
+            int countdown = 5;
+            while (countdown > 0)
+            {
+                countdownText.text = $"{countdown}";
+                yield return new WaitForSeconds(1f);
+                countdown--;
+            }
+
+            yield return new WaitForSeconds(1f);
+
             var calibrationStartResult = StartCalibration(
-    resultCallback: (calibrationResult) =>
-        Debug.Log("Calibration was " + (calibrationResult ? "successful" : "unsuccessful"))
-    );
+                resultCallback: (calibrationResult) =>
+                    Debug.Log("Calibration was " + (calibrationResult ? "successful" : "unsuccessful"))
+            );
 
             Debug.Log("Calibration " + (calibrationStartResult ? "" : "not ") + "started");
         }

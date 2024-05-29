@@ -36,10 +36,14 @@ namespace Tobii.Research.Unity
         private float currentCountdown = 0f; // Variable to store the current countdown value
         private bool isBaselineStart = true; // Track whether it is the start or end baseline
 
+        // Reference to Timer class
+        private Timer timer;
+
         protected override void OnAwake()
         {
             base.OnAwake();
             Instance = this;
+            timer = FindObjectOfType<Timer>(); // Find the Timer instance
         }
 
         protected override void OnStart()
@@ -137,12 +141,23 @@ namespace Tobii.Research.Unity
         private void DeterminePanelLooked(Vector2 gazePosition)
         {
             int strategy = strategyDropdown.value;
+            string previousPanelNameLooked = panelNameLooked;
             panelNameLooked = "None";
 
             switch (strategy)
             {
                 case 0: // Strategy1
-                    panelNameLooked = "FPV";
+                    float panelHeight1 = Screen.height * 0.5f;
+                    float panelWidth1 = Screen.width * 0.5f;
+                    float leftBound1 = (Screen.width - panelWidth1) / 2;
+                    float rightBound1 = leftBound1 + panelWidth1;
+                    float bottomBound1 = (Screen.height - panelHeight1) / 2;
+                    float topBound1 = bottomBound1 + panelHeight1;
+
+                    if (gazePosition.x >= leftBound1 && gazePosition.x <= rightBound1 && gazePosition.y >= bottomBound1 && gazePosition.y <= topBound1)
+                    {
+                        panelNameLooked = "FPV";
+                    }
                     break;
                 case 1: // Strategy2
                     float panelHeight = 540f;
@@ -196,6 +211,17 @@ namespace Tobii.Research.Unity
                         panelNameLooked = "MAP";
                     }
                     break;
+            }
+
+            // Update panel watch time if the panel looked at has changed
+            if (previousPanelNameLooked != panelNameLooked && panelNameLooked != "None")
+            {
+                float currentTime = Time.time;
+                if (previousPanelNameLooked != "None")
+                {
+                    timer.UpdatePanelWatchTime(previousPanelNameLooked, currentTime - timer.GetSessionStartTime());
+                }
+                timer.SetSessionStartTime(currentTime);
             }
         }
 
@@ -329,4 +355,5 @@ namespace Tobii.Research.Unity
             }
         }
     }
+
 }

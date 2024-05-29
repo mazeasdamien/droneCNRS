@@ -1,0 +1,9 @@
+LeftStick was used for a total of 21.69868 seconds.
+RightStick was used for a total of 26.48236 seconds.
+DPadDown was used for a total of 0.7496884 seconds.
+DPadUp was used for a total of 0.2842743 seconds.
+Total Collisions: 0
+Collision Percentage of Countdown Time: 0%
+FPV was watched for 0 seconds (0.00%).
+Good Photos Taken: 0
+Double Warning Photo Attempts: 0

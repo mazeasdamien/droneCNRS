@@ -1,0 +1,5 @@
+Total Collisions: 0
+Collision Percentage of Countdown Time: 0%
+FPV was watched for 0 seconds (0.00%).
+Good Photos Taken: 0
+Double Warning Photo Attempts: 0
