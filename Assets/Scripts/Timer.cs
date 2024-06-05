@@ -45,7 +45,7 @@ public class Timer : MonoBehaviour
     public RenderTexture renderTexture;
 
     private Dictionary<string, (float duration, int count)> inputSummary = new Dictionary<string, (float duration, int count)>();
-    private Dictionary<string, float> panelWatchTime = new Dictionary<string, float>();
+    private Dictionary<string, int> panelLookCount = new Dictionary<string, int>(); // Dictionary to track the number of times each panel has been looked at
     private bool isLoggingStarted = false;
     private bool previousSouthButtonState = false;
     private float sessionStartTime;
@@ -77,35 +77,6 @@ public class Timer : MonoBehaviour
         UpdateTimerDisplay(timeRemaining);
         screenshotMessageText.gameObject.SetActive(false); // Hide the message at the start
         errorMessageText.gameObject.SetActive(false); // Hide the error message at the start
-
-        InitializePanelWatchTimes();
-    }
-
-    private void InitializePanelWatchTimes()
-    {
-        int strategy = strategyDropdown.value;
-
-        panelWatchTime.Clear();
-        switch (strategy)
-        {
-            case 0:
-                panelWatchTime["FPV"] = 0f;
-                break;
-            case 1:
-                panelWatchTime["FPV"] = 0f;
-                panelWatchTime["TPV"] = 0f;
-                break;
-            case 2:
-                panelWatchTime["FPV"] = 0f;
-                panelWatchTime["VIRTUAL TPV LOW QUALITY"] = 0f;
-                panelWatchTime["MAP"] = 0f;
-                break;
-            case 3:
-                panelWatchTime["FPV"] = 0f;
-                panelWatchTime["VIRTUAL TPV HIGH QUALITY"] = 0f;
-                panelWatchTime["MAP"] = 0f;
-                break;
-        }
     }
 
     void Update()
@@ -426,15 +397,10 @@ public class Timer : MonoBehaviour
             summaryWriter.WriteLine($"Total Collisions: {totalCollisions}");
             summaryWriter.WriteLine($"Collision Percentage of Countdown Time: {collisionPercentage}%");
 
-            // Calculate total session time
-            float totalSessionTime = countdownTime;
-
-            // Write panel watch time data to summary file
-            foreach (var panel in panelWatchTime)
+            // Write panel look count data to summary file
+            foreach (var panel in panelLookCount)
             {
-                float watchTime = panel.Value;
-                float watchPercentage = (watchTime / totalSessionTime) * 100;
-                summaryWriter.WriteLine($"{panel.Key} was watched for {watchTime} seconds ({watchPercentage:F2}%).");
+                summaryWriter.WriteLine($"{panel.Key} was looked at {panel.Value} times.");
             }
 
             // Write photo data to summary file
@@ -486,12 +452,13 @@ public class Timer : MonoBehaviour
         }
     }
 
-    public void UpdatePanelWatchTime(string panelName, float deltaTime)
+    public void UpdatePanelLookCount(string panelName)
     {
-        if (panelWatchTime.ContainsKey(panelName))
+        if (!panelLookCount.ContainsKey(panelName))
         {
-            panelWatchTime[panelName] += deltaTime;
+            panelLookCount[panelName] = 0;
         }
+        panelLookCount[panelName]++;
     }
 
     public void SetSessionStartTime(float time)
@@ -524,7 +491,15 @@ public class Timer : MonoBehaviour
     {
         if (GazeTrail.Instance != null)
         {
-            string folderPath = Path.Combine(Application.dataPath, "Data");
+            string participantID = participantIDInput.text;
+            if (string.IsNullOrEmpty(participantID))
+            {
+                Debug.LogError("Participant ID is empty.");
+                return;
+            }
+            DateTime currentDate = DateTime.Now;
+            string formattedDate = currentDate.ToString("ddMMyyyy");
+            string folderPath = Path.Combine(Application.dataPath, $"Participant_{participantID}_{formattedDate}");
             Directory.CreateDirectory(folderPath); // Create directory if it doesn't exist
             string filePath = Path.Combine(folderPath, $"GazeData_{participantIDInput.text}_{environmentDropdown.options[environmentDropdown.value].text}_{strategyDropdown.options[strategyDropdown.value].text}.csv");
             GazeTrail.Instance.StartRecording(filePath);
@@ -543,7 +518,15 @@ public class Timer : MonoBehaviour
     {
         if (DronePathRecorder.Instance != null)
         {
-            string folderPath = Path.Combine(Application.dataPath, "Data");
+            string participantID = participantIDInput.text;
+            if (string.IsNullOrEmpty(participantID))
+            {
+                Debug.LogError("Participant ID is empty.");
+                return;
+            }
+            DateTime currentDate = DateTime.Now;
+            string formattedDate = currentDate.ToString("ddMMyyyy");
+            string folderPath = Path.Combine(Application.dataPath, $"Participant_{participantID}_{formattedDate}");
             Directory.CreateDirectory(folderPath); // Create directory if it doesn't exist
             string filePath = Path.Combine(folderPath, $"PathData_{participantIDInput.text}_{environmentDropdown.options[environmentDropdown.value].text}_{strategyDropdown.options[strategyDropdown.value].text}.csv");
             DronePathRecorder.Instance.StartRecording(filePath);

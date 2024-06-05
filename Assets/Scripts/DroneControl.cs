@@ -6,7 +6,6 @@ using UnityEngine.InputSystem;
 
 public class DroneControl : MonoBehaviour
 {
-    // Singleton instance
     public static DroneControl Instance { get; private set; }
 
     [Header("Movement Properties")]
@@ -25,7 +24,7 @@ public class DroneControl : MonoBehaviour
 
     [Header("Noise Properties")]
     public float noiseStrength = 0.1f;
-    public Vector2 noiseFrequencyRange = new Vector2(1f, 3f);
+    public Vector2 noiseFrequencyRange = new(1f, 3f);
     private Vector3 velocity = Vector3.zero;
     public float smoothTime = 0.3f;
     private Vector3 targetPosition;

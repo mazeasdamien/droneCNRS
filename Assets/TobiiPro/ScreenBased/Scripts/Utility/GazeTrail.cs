@@ -160,8 +160,8 @@ namespace Tobii.Research.Unity
                     }
                     break;
                 case 1: // Strategy2
-                    float panelHeight = 540f;
-                    float panelWidth = 960f;
+                    float panelHeight = Screen.height * 0.5f;
+                    float panelWidth = Screen.width * 0.5f;
                     float leftBound = (Screen.width - panelWidth) / 2;
                     float rightBound = leftBound + panelWidth;
 
@@ -169,11 +169,11 @@ namespace Tobii.Research.Unity
                     {
                         if (gazePosition.y >= (Screen.height - panelHeight) / 2 && gazePosition.y <= (Screen.height + panelHeight) / 2)
                         {
-                            panelNameLooked = "TPV";
+                            panelNameLooked = "FPV";
                         }
                         else if (gazePosition.y >= (Screen.height - panelHeight * 1.5f) / 2 && gazePosition.y <= (Screen.height - panelHeight / 2) / 2)
                         {
-                            panelNameLooked = "FPV";
+                            panelNameLooked = "Vision_Assist";
                         }
                     }
                     break;
@@ -182,11 +182,11 @@ namespace Tobii.Research.Unity
                     {
                         if (gazePosition.y > Screen.height / 2)
                         {
-                            panelNameLooked = "VIRTUAL TPV LOW QUALITY";
+                            panelNameLooked = "FPV";
                         }
                         else
                         {
-                            panelNameLooked = "FPV";
+                            panelNameLooked = "VIRTUAL TPV LOW QUALITY";
                         }
                     }
                     else
@@ -199,11 +199,11 @@ namespace Tobii.Research.Unity
                     {
                         if (gazePosition.y > Screen.height / 2)
                         {
-                            panelNameLooked = "VIRTUAL TPV HIGH QUALITY";
+                            panelNameLooked = "FPV";
                         }
                         else
                         {
-                            panelNameLooked = "FPV";
+                            panelNameLooked = "VIRTUAL TPV HIGH QUALITY";
                         }
                     }
                     else
@@ -211,17 +211,6 @@ namespace Tobii.Research.Unity
                         panelNameLooked = "MAP";
                     }
                     break;
-            }
-
-            // Update panel watch time if the panel looked at has changed
-            if (previousPanelNameLooked != panelNameLooked && panelNameLooked != "None")
-            {
-                float currentTime = Time.time;
-                if (previousPanelNameLooked != "None")
-                {
-                    timer.UpdatePanelWatchTime(previousPanelNameLooked, currentTime - timer.GetSessionStartTime());
-                }
-                timer.SetSessionStartTime(currentTime);
             }
         }
 
@@ -357,5 +346,4 @@ namespace Tobii.Research.Unity
             }
         }
     }
-
 }
