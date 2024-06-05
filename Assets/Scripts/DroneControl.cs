@@ -37,6 +37,9 @@ public class DroneControl : MonoBehaviour
     [Header("Drone Path Recording")]
     public GameObject originObject; // Reference to the origin GameObject
 
+    [Header("UI References")]
+    public RectTransform uiElement; // Reference to the RectTransform that you want to control
+
     private Vector2 _rightStickInput;
     private Vector2 _leftStickInput;
     private float _verticalMovement;
@@ -122,6 +125,14 @@ public class DroneControl : MonoBehaviour
         }
 
         AdjustRotation();
+
+        // Update UI Element rotation to match camera X rotation
+        if (uiElement != null)
+        {
+            Vector3 newRotation = uiElement.localEulerAngles;
+            newRotation.z = cam.localEulerAngles.x;
+            uiElement.localEulerAngles = newRotation;
+        }
 
         // Log inputs if logging is enabled
         if (isLogging)
