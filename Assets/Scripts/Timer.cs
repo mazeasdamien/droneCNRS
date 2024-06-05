@@ -44,6 +44,10 @@ public class Timer : MonoBehaviour
     // New field for the RenderTexture
     public RenderTexture renderTexture;
 
+    // New array for additional audio clips
+    public AudioClip[] additionalAudioClips;
+    private int currentAudioClipIndex = 0;
+
     private Dictionary<string, (float duration, int count)> inputSummary = new Dictionary<string, (float duration, int count)>();
     private Dictionary<string, int> panelLookCount = new Dictionary<string, int>(); // Dictionary to track the number of times each panel has been looked at
     private bool isLoggingStarted = false;
@@ -55,7 +59,7 @@ public class Timer : MonoBehaviour
     public int totalCollisions = 0;
     public float collisionPercentage = 0f;
     private HashSet<GameObject> photographedBodies = new HashSet<GameObject>();
-    private List<int> beepTimes = new List<int> { 480, 420, 360, 300, 240, 180, 120, 60 };
+    private List<int> beepTimes = new List<int> { 540, 480, 420, 360, 300, 240, 180, 120, 60, 30, 10 };
     private float lastBeepTime = -1f;
 
     public void UpdateCollisionSummary(int collisionCount, float percentage)
@@ -346,10 +350,11 @@ public class Timer : MonoBehaviour
         {
             int roundedTimeRemaining = Mathf.CeilToInt(timeRemaining);
 
-            // Play beep at each minute (08:00, 07:00, etc.)
+            // Play beep at each minute (09:00, 08:00, etc.)
             if (beepTimes.Contains(roundedTimeRemaining))
             {
                 beepSound.Play();
+                PlayNextAudioClip(); // Play the next audio clip
                 beepTimes.Remove(roundedTimeRemaining); // Remove to avoid replaying at the same time
             }
 
@@ -359,6 +364,22 @@ public class Timer : MonoBehaviour
                 beepSound.Play();
                 lastBeepTime = Time.time;
             }
+        }
+    }
+
+    private void PlayNextAudioClip()
+    {
+        if (additionalAudioClips != null && additionalAudioClips.Length > 0)
+        {
+            // Get the next audio clip from the array
+            AudioClip nextClip = additionalAudioClips[currentAudioClipIndex];
+
+            // Play the next audio clip
+            beepSound.clip = nextClip;
+            beepSound.Play();
+
+            // Update the index for the next clip
+            currentAudioClipIndex = (currentAudioClipIndex + 1) % additionalAudioClips.Length;
         }
     }
 
