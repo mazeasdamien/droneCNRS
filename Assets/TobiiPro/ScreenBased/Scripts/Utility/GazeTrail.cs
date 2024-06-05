@@ -299,7 +299,9 @@ namespace Tobii.Research.Unity
             }
 
             string fileSuffix = isBaselineStart ? "start" : "end";
-            string folderPath = Path.Combine(Application.dataPath, "Data");
+            DateTime currentDate = DateTime.Now;
+            string formattedDate = currentDate.ToString("ddMMyyyy");
+            string folderPath = Path.Combine(Application.dataPath, $"Participant_{participantID}_{formattedDate}");
 
             // Ensure the folder exists
             if (!Directory.Exists(folderPath))

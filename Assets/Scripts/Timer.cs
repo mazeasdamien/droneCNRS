@@ -6,6 +6,8 @@ using UnityEngine.InputSystem;
 using System.Collections;
 using System.Collections.Generic;
 using Tobii.Research.Unity;
+using System.Linq;
+using System;
 
 public class Timer : MonoBehaviour
 {
@@ -14,9 +16,11 @@ public class Timer : MonoBehaviour
     public Button startButton;
     public float countdownTime;
     public AudioSource beepSound; // Add a field for the AudioSource
+    public TextMeshProUGUI collisionWarningText; // Reference to the collision warning message
 
     private float timeRemaining;
     private bool timerIsRunning = false;
+    private bool isCountdownFrozen = false; // Track if the countdown is frozen
     private StreamWriter summaryWriter;
 
     [Header("Input References")]
@@ -106,7 +110,7 @@ public class Timer : MonoBehaviour
 
     void Update()
     {
-        if (timerIsRunning)
+        if (timerIsRunning && !isCountdownFrozen)
         {
             if (timeRemaining > 0)
             {
@@ -123,6 +127,21 @@ public class Timer : MonoBehaviour
                 EndSession();
             }
         }
+    }
+
+    public void FreezeCountdown()
+    {
+        isCountdownFrozen = true;
+    }
+
+    public void UnfreezeCountdown()
+    {
+        isCountdownFrozen = false;
+    }
+
+    public void DisplayCollisionWarning(bool display)
+    {
+        collisionWarningText.gameObject.SetActive(display);
     }
 
     private void StartCountdown()
@@ -151,7 +170,15 @@ public class Timer : MonoBehaviour
 
     private void InitializeWriters()
     {
-        string folderPath = Path.Combine(Application.dataPath, "Data");
+        string participantID = participantIDInput.text;
+        if (string.IsNullOrEmpty(participantID))
+        {
+            Debug.LogError("Participant ID is empty.");
+            return;
+        }
+        DateTime currentDate = DateTime.Now;
+        string formattedDate = currentDate.ToString("ddMMyyyy");
+        string folderPath = Path.Combine(Application.dataPath, $"Participant_{participantID}_{formattedDate}");
         Directory.CreateDirectory(folderPath); // This will only create if not exist
 
         if (summaryWriter != null)
@@ -247,7 +274,17 @@ public class Timer : MonoBehaviour
 
         // Build the screenshot file name
         string screenshotFileName = $"Screenshot_{participantIDInput.text}_{environmentDropdown.options[environmentDropdown.value].text}_{strategyDropdown.options[strategyDropdown.value].text}_{screenshotCount}.jpg";
-        string folderPath = Path.Combine(Application.dataPath, "Data");
+
+        string participantID = participantIDInput.text;
+        if (string.IsNullOrEmpty(participantID))
+        {
+            Debug.LogError("Participant ID is empty.");
+            return;
+        }
+        DateTime currentDate = DateTime.Now;
+        string formattedDate = currentDate.ToString("ddMMyyyy");
+        string folderPath = Path.Combine(Application.dataPath, $"Participant_{participantID}_{formattedDate}");
+
         string screenshotPath = Path.Combine(folderPath, screenshotFileName);
 
         // Capture the screenshot
@@ -356,10 +393,6 @@ public class Timer : MonoBehaviour
 
     private void EndSession()
     {
-        if (droneCollisionDetector != null)
-        {
-            droneCollisionDetector.UpdateCollisionSummary(); // Ensure this gets called before finalizing logs
-        }
         timerIsRunning = false;
         isLoggingStarted = false; // Reset the flag for the next session
         UpdateTimerDisplay(0);
@@ -430,7 +463,15 @@ public class Timer : MonoBehaviour
             byte[] bytes = texture.EncodeToJPG();
 
             // Build the file path
-            string folderPath = Path.Combine(Application.dataPath, "Data");
+            string participantID = participantIDInput.text;
+            if (string.IsNullOrEmpty(participantID))
+            {
+                Debug.LogError("Participant ID is empty.");
+                return;
+            }
+            DateTime currentDate = DateTime.Now;
+            string formattedDate = currentDate.ToString("ddMMyyyy");
+            string folderPath = Path.Combine(Application.dataPath, $"Participant_{participantID}_{formattedDate}");
             string fileName = $"RenderTexture_{participantIDInput.text}_{environmentDropdown.options[environmentDropdown.value].text}_{strategyDropdown.options[strategyDropdown.value].text}.jpg";
             string filePath = Path.Combine(folderPath, fileName);
 
@@ -521,7 +562,15 @@ public class Timer : MonoBehaviour
     {
         if (DroneControl.Instance != null)
         {
-            string folderPath = Path.Combine(Application.dataPath, "Data");
+            string participantID = participantIDInput.text;
+            if (string.IsNullOrEmpty(participantID))
+            {
+                Debug.LogError("Participant ID is empty.");
+                return;
+            }
+            DateTime currentDate = DateTime.Now;
+            string formattedDate = currentDate.ToString("ddMMyyyy");
+            string folderPath = Path.Combine(Application.dataPath, $"Participant_{participantID}_{formattedDate}");
             Directory.CreateDirectory(folderPath); // Create directory if it doesn't exist
             string filePath = Path.Combine(folderPath, $"GamepadInputLog_{participantIDInput.text}_{environmentDropdown.options[environmentDropdown.value].text}_{strategyDropdown.options[strategyDropdown.value].text}.csv");
             DroneControl.Instance.StartInputLogging(filePath);

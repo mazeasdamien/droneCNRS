@@ -3,11 +3,7 @@ using UnityEngine.InputSystem;
 
 public class DroneCollisionDetector : MonoBehaviour
 {
-    private int collisionCount = 0;
-    private float totalCollisionTime = 0f;
-    private const float CollisionIncrement = 1f; // Fixed time increment per collision
     private bool isColliding = false; // Track if a collision is ongoing
-
     public Timer timerScript; // Reference to Timer script
 
     private void OnCollisionEnter(Collision collision)
@@ -16,19 +12,12 @@ public class DroneCollisionDetector : MonoBehaviour
         {
             if (!isColliding)
             {
-                collisionCount++;
                 isColliding = true;
                 VibrateGamepad();
                 Debug.Log("Collision Enter Detected");
+                timerScript.FreezeCountdown(); // Freeze the countdown
+                timerScript.DisplayCollisionWarning(true); // Show warning message
             }
-        }
-    }
-
-    private void OnCollisionStay(Collision collision)
-    {
-        if (collision.gameObject.CompareTag("environment"))
-        {
-            totalCollisionTime += CollisionIncrement * Time.deltaTime; // Increment based on time delta
         }
     }
 
@@ -37,21 +26,8 @@ public class DroneCollisionDetector : MonoBehaviour
         if (collision.gameObject.CompareTag("environment"))
         {
             isColliding = false;
-        }
-    }
-
-    private void OnDestroy()
-    {
-        UpdateCollisionSummary(); // Ensure this gets called reliably, consider moving to a different method if needed
-    }
-
-    // Change this method's access level to public
-    public void UpdateCollisionSummary()
-    {
-        if (timerScript != null)
-        {
-            float collisionPercentage = (totalCollisionTime / timerScript.countdownTime) * 100f;
-            timerScript.UpdateCollisionSummary(collisionCount, collisionPercentage);
+            timerScript.UnfreezeCountdown(); // Unfreeze the countdown
+            timerScript.DisplayCollisionWarning(false); // Hide warning message
         }
     }
 

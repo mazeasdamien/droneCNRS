@@ -54,6 +54,9 @@ public class DroneControl : MonoBehaviour
 
     private float currentCountdown = 0f; // Variable to store the current countdown value
 
+    [Header("Control Sensitivity")]
+    public float verticalDeadZone = 0.2f; // Define the dead zone size for vertical movement
+
     private void Awake()
     {
         // Singleton pattern implementation
@@ -169,13 +172,22 @@ public class DroneControl : MonoBehaviour
         // Handle gamepad input
         _leftStickInput = leftstick?.action?.ReadValue<Vector2>() ?? Vector2.zero;
         _rightStickInput = rightstick?.action?.ReadValue<Vector2>() ?? Vector2.zero;
-        _verticalMovement = _leftStickInput.y;
 
-        //Debug.Log($"Right Stick Input: {_rightStickInput}");
-        //Debug.Log($"Left Stick Input: {_leftStickInput}");
+        // Apply dead zone to vertical movement
+        _verticalMovement = Mathf.Abs(_leftStickInput.y) < verticalDeadZone ? 0 : Mathf.Sign(_leftStickInput.y);
 
-        float rotation = _leftStickInput.x * rotationSpeed * Time.deltaTime;
-        transform.Rotate(0, rotation, 0, Space.World);
+        // Check if the joystick is in the upper or lower part
+        bool isInUpperOrLowerPart = IsInUpperOrLowerPart(_leftStickInput);
+
+        // Debug.Log($"Right Stick Input: {_rightStickInput}");
+        // Debug.Log($"Left Stick Input: {_leftStickInput}");
+
+        // Apply rotation only if the joystick is not in the upper or lower part
+        if (!isInUpperOrLowerPart)
+        {
+            float rotation = _leftStickInput.x * rotationSpeed * Time.deltaTime;
+            transform.Rotate(0, rotation, 0, Space.World);
+        }
 
         float dpadVertical = (dpadup?.action?.ReadValue<float>() ?? 0f) - (dpaddown?.action?.ReadValue<float>() ?? 0f);
         float cameraRotationX = cameraRotationSpeed * Time.deltaTime * dpadVertical;
@@ -200,6 +212,12 @@ public class DroneControl : MonoBehaviour
             newRotationX = Mathf.Clamp(cam.localEulerAngles.x - cameraRotationX, 0, 90);
             cam.localEulerAngles = new Vector3(newRotationX, cam.localEulerAngles.y, cam.localEulerAngles.z);
         }
+    }
+
+    private bool IsInUpperOrLowerPart(Vector2 stickInput)
+    {
+        float angle = Vector2.SignedAngle(Vector2.up, stickInput);
+        return Mathf.Abs(angle) <= 45f || Mathf.Abs(angle) >= 135f;
     }
 
     private void ApplyMovement()
@@ -237,8 +255,8 @@ public class DroneControl : MonoBehaviour
         // Apply the calculated velocity to the Rigidbody
         body.velocity = finalVelocity;
         //
-        //Debug.Log($"Applying Movement: {finalVelocity}");
-        //Debug.Log($"Rigidbody Velocity: {body.velocity}");
+        // Debug.Log($"Applying Movement: {finalVelocity}");
+        // Debug.Log($"Rigidbody Velocity: {body.velocity}");
     }
 
     private void UpdateTargetPositionWithNoise()

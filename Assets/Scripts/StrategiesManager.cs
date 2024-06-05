@@ -27,6 +27,12 @@ public class StrategiesManager : MonoBehaviour
     private Strategy currentStrategy = Strategy.Strategy1;
 
     public TMP_Dropdown dropdown; // Reference to the TMP Dropdown
+    public TMP_Text tmpText; // Reference to the TMP_Text object
+
+    public Vector3 strategy1Position; // Position for Strategy1
+    public Vector3 strategy2Position; // Position for Strategy2
+    public Vector3 strategy3Position; // Position for Strategy3
+    public Vector3 strategy4Position; // Position for Strategy4
 
     private void Start()
     {
@@ -65,8 +71,6 @@ public class StrategiesManager : MonoBehaviour
 
     private void ApplyStrategy()
     {
-
-
         switch (currentStrategy)
         {
             case Strategy.Strategy1:
@@ -82,6 +86,10 @@ public class StrategiesManager : MonoBehaviour
                 {
                     g.SetActive(false);
                 }
+                if (tmpText != null)
+                {
+                    tmpText.rectTransform.localPosition = strategy1Position;
+                }
                 break;
             case Strategy.Strategy2:
                 S1.SetActive(false);
@@ -95,6 +103,10 @@ public class StrategiesManager : MonoBehaviour
                 foreach (GameObject g in Low)
                 {
                     g.SetActive(false);
+                }
+                if (tmpText != null)
+                {
+                    tmpText.rectTransform.localPosition = strategy2Position;
                 }
                 break;
             case Strategy.Strategy3:
@@ -110,6 +122,10 @@ public class StrategiesManager : MonoBehaviour
                 {
                     g.SetActive(true);
                 }
+                if (tmpText != null)
+                {
+                    tmpText.rectTransform.localPosition = strategy3Position;
+                }
                 break;
             case Strategy.Strategy4:
                 S1.SetActive(false);
@@ -123,6 +139,10 @@ public class StrategiesManager : MonoBehaviour
                 foreach (GameObject g in Low)
                 {
                     g.SetActive(false);
+                }
+                if (tmpText != null)
+                {
+                    tmpText.rectTransform.localPosition = strategy4Position;
                 }
                 break;
             default:
