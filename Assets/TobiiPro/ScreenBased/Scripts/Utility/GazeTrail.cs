@@ -14,7 +14,6 @@ namespace Tobii.Research.Unity
         private EyeTracker _eyeTracker;
         private Calibration _calibrationObject;
 
-        // References to the UI elements
         [SerializeField]
         private Image gazeCursor;
         [SerializeField]
@@ -24,26 +23,34 @@ namespace Tobii.Research.Unity
         [SerializeField]
         private Button startButton;
         [SerializeField]
-        private RawImage blackScreen; // Reference to the black screen RawImage
+        private RawImage blackScreen;
         [SerializeField]
-        private TMP_Dropdown strategyDropdown; // Reference to the strategy dropdown
+        private TMP_Dropdown strategyDropdown;
         [SerializeField]
-        private TextMeshProUGUI lookedAtText; // Reference to the TMP_Text element for displaying the looked-at panel
+        private TextMeshProUGUI lookedAtText;
 
-        // StreamWriter for recording gaze data
         private StreamWriter gazeWriter;
         private bool isRecording = false;
-        private float currentCountdown = 0f; // Variable to store the current countdown value
-        private bool isBaselineStart = true; // Track whether it is the start or end baseline
+        private float currentCountdown = 0f;
+        private bool isBaselineStart = true;
 
-        // Reference to Timer class
         private Timer timer;
+
+        // Public fields to display in the inspector for panel watch times
+        public float fpvWatchTime = 0f;
+        public float visionAssistWatchTime = 0f;
+        public float virtualTpvLowQualityWatchTime = 0f;
+        public float virtualTpvHighQualityWatchTime = 0f;
+        public float mapWatchTime = 0f;
+
+        private float lastGazeTimeUpdate = 0f;
+        private string lastPanelNameLooked = "None";
 
         protected override void OnAwake()
         {
             base.OnAwake();
             Instance = this;
-            timer = FindObjectOfType<Timer>(); // Find the Timer instance
+            timer = FindObjectOfType<Timer>();
         }
 
         protected override void OnStart()
@@ -51,45 +58,6 @@ namespace Tobii.Research.Unity
             base.OnStart();
             _eyeTracker = EyeTracker.Instance;
             _calibrationObject = Calibration.Instance;
-
-            // Ensure gazeCursor and gazeText are assigned
-            if (gazeCursor == null)
-            {
-                Debug.LogError("GazeCursor is not assigned in the inspector.");
-            }
-
-            if (gazeText == null)
-            {
-                Debug.LogError("GazeText is not assigned in the inspector.");
-            }
-
-            // Ensure participantIDInput and startButton are assigned
-            if (participantIDInput == null)
-            {
-                Debug.LogError("ParticipantIDInput is not assigned in the inspector.");
-            }
-
-            if (startButton == null)
-            {
-                Debug.LogError("StartButton is not assigned in the inspector.");
-            }
-
-            if (blackScreen == null)
-            {
-                Debug.LogError("BlackScreen is not assigned in the inspector.");
-            }
-
-            if (strategyDropdown == null)
-            {
-                Debug.LogError("StrategyDropdown is not assigned in the inspector.");
-            }
-
-            if (lookedAtText == null)
-            {
-                Debug.LogError("LookedAtText is not assigned in the inspector.");
-            }
-
-            // Add listener to the start button
             startButton.onClick.AddListener(OnStartButtonClick);
         }
 
@@ -101,6 +69,8 @@ namespace Tobii.Research.Unity
             {
                 RecordGazeData();
             }
+
+            UpdatePanelWatchTime();
         }
 
         private void UpdateGazeCursor()
@@ -110,22 +80,11 @@ namespace Tobii.Research.Unity
             var data = _eyeTracker.LatestGazeData;
             if (data.CombinedGazeRayScreenValid)
             {
-                // Use the GazePointOnDisplayArea data (normalized values)
                 Vector2 gazePointOnDisplay = new(data.Left.GazePointOnDisplayArea.x, data.Left.GazePointOnDisplayArea.y);
-
-                // Convert normalized coordinates to screen coordinates
                 Vector2 gazePosition = new(gazePointOnDisplay.x * Screen.width, (1 - gazePointOnDisplay.y) * Screen.height);
-
-                // Convert screen coordinates to local coordinates
                 RectTransformUtility.ScreenPointToLocalPointInRectangle(gazeCursor.canvas.transform as RectTransform, gazePosition, Camera.main, out Vector2 localPosition);
-
-                // Update the position of the gazeCursor
                 gazeCursor.rectTransform.anchoredPosition = localPosition;
-
-                // Display the gaze values in the TextMeshPro element
                 gazeText.text = $"Gaze Position: ({gazePosition.x}, {gazePosition.y})";
-
-                // Determine the panel looked at
                 DeterminePanelLooked(gazePosition);
             }
             else
@@ -212,6 +171,38 @@ namespace Tobii.Research.Unity
                     }
                     break;
             }
+
+            if (panelNameLooked != previousPanelNameLooked)
+            {
+                UpdatePanelWatchTime();
+                lastPanelNameLooked = panelNameLooked;
+            }
+        }
+
+        private void UpdatePanelWatchTime()
+        {
+            if (!timer.IsTimerRunning() || string.IsNullOrEmpty(lastPanelNameLooked)) return;
+
+            float deltaTime = Time.time - lastGazeTimeUpdate;
+            switch (lastPanelNameLooked)
+            {
+                case "FPV":
+                    fpvWatchTime += deltaTime;
+                    break;
+                case "Vision_Assist":
+                    visionAssistWatchTime += deltaTime;
+                    break;
+                case "VIRTUAL TPV LOW QUALITY":
+                    virtualTpvLowQualityWatchTime += deltaTime;
+                    break;
+                case "VIRTUAL TPV HIGH QUALITY":
+                    virtualTpvHighQualityWatchTime += deltaTime;
+                    break;
+                case "MAP":
+                    mapWatchTime += deltaTime;
+                    break;
+            }
+            lastGazeTimeUpdate = Time.time;
         }
 
         private void RecordGazeData()
@@ -222,13 +213,10 @@ namespace Tobii.Research.Unity
             DateTime dateTime = DateTime.UtcNow;
             string timestamp = dateTime.ToString("yyyy-MM-dd HH:mm:ss.fff");
 
-            // Retrieve normalized gaze point
             Vector2 gazePointOnDisplay = new(data.Left.GazePointOnDisplayArea.x, data.Left.GazePointOnDisplayArea.y);
 
-            // Convert normalized coordinates to pixel coordinates (1920x1080)
-            Vector2 gazePointInPixels = new(gazePointOnDisplay.x * 1920, (1 - gazePointOnDisplay.y) * 1080);
+            Vector2 gazePointInPixels = new(gazePointOnDisplay.x * Screen.height, (1 - gazePointOnDisplay.y) * Screen.width);
 
-            // Pupil data and validity
             bool validLeftGaze = data.Left.GazePointValid;
             bool validRightGaze = data.Right.GazePointValid;
             bool validLeftPupil = data.Left.PupilDiameterValid;
@@ -236,7 +224,6 @@ namespace Tobii.Research.Unity
             float leftPupilDiameter = data.Left.PupilDiameter;
             float rightPupilDiameter = data.Right.PupilDiameter;
 
-            // Additional eye-specific data
             var leftGazeOriginInTrackBox = data.Left.GazeOriginInTrackBoxCoordinates;
             var leftGazeOriginInUser = data.Left.GazeOriginInUserCoordinates;
             var leftGazePointInUser = data.Left.GazePointInUserCoordinates;
@@ -261,6 +248,7 @@ namespace Tobii.Research.Unity
                                  "LeftGazeOriginInTrackBoxCoordinatesX,LeftGazeOriginInTrackBoxCoordinatesY,LeftGazeOriginInTrackBoxCoordinatesZ,LeftGazeOriginInUserCoordinatesX,LeftGazeOriginInUserCoordinatesY,LeftGazeOriginInUserCoordinatesZ,LeftGazePointInUserCoordinatesX,LeftGazePointInUserCoordinatesY,LeftGazePointInUserCoordinatesZ,LeftGazePointOnDisplayAreaX,LeftGazePointOnDisplayAreaY,LeftGazeRayScreenOriginX,LeftGazeRayScreenOriginY,LeftGazeRayScreenOriginZ,LeftGazeRayScreenDirectionX,LeftGazeRayScreenDirectionY,LeftGazeRayScreenDirectionZ," +
                                  "RightGazeOriginInTrackBoxCoordinatesX,RightGazeOriginInTrackBoxCoordinatesY,RightGazeOriginInTrackBoxCoordinatesZ,RightGazeOriginInUserCoordinatesX,RightGazeOriginInUserCoordinatesY,RightGazeOriginInUserCoordinatesZ,RightGazePointInUserCoordinatesX,RightGazePointInUserCoordinatesY,RightGazePointInUserCoordinatesZ,RightGazePointOnDisplayAreaX,RightGazePointOnDisplayAreaY,RightGazeRayScreenOriginX,RightGazeRayScreenOriginY,RightGazeRayScreenOriginZ,RightGazeRayScreenDirectionX,RightGazeRayScreenDirectionY,RightGazeRayScreenDirectionZ,PanelNameLooked");
             isRecording = true;
+            lastGazeTimeUpdate = Time.time;
         }
 
         public void StopRecording()
@@ -287,34 +275,42 @@ namespace Tobii.Research.Unity
                 return;
             }
 
-            string fileSuffix = isBaselineStart ? "start" : "end";
             DateTime currentDate = DateTime.Now;
             string formattedDate = currentDate.ToString("ddMMyyyy");
-            string folderPath = Path.Combine(Application.dataPath, $"Participant_{participantID}_{formattedDate}");
+            string folderPath = Path.Combine(Application.dataPath, $"{participantID}_{formattedDate}");
 
-            // Ensure the folder exists
             if (!Directory.Exists(folderPath))
             {
                 Directory.CreateDirectory(folderPath);
             }
 
-            string filePath = Path.Combine(folderPath, $"baseline_{participantID}_{fileSuffix}.csv");
+            string filePath = GetAvailableFilePath(folderPath, $"BaselineEye_{participantID}_");
 
-            // Show the black screen
             blackScreen.gameObject.SetActive(true);
 
             StartRecording(filePath);
-            Invoke(nameof(StopRecordingAndHideBlackScreen), 60f); // Record for 60 seconds
+            Invoke(nameof(StopRecordingAndHideBlackScreen), 60f);
+        }
+
+        private string GetAvailableFilePath(string folderPath, string baseFileName)
+        {
+            int fileIndex = 1;
+            string filePath;
+            do
+            {
+                filePath = Path.Combine(folderPath, $"{baseFileName}{fileIndex}.csv");
+                fileIndex++;
+            } while (File.Exists(filePath));
+
+            return filePath;
         }
 
         private void StopRecordingAndHideBlackScreen()
         {
             StopRecording();
 
-            // Hide the black screen
             blackScreen.gameObject.SetActive(false);
 
-            // Toggle baseline start/end
             isBaselineStart = !isBaselineStart;
         }
 

@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using UnityEngine;
 using UnityEngine.UI;
@@ -5,9 +6,8 @@ using TMPro;
 using UnityEngine.InputSystem;
 using System.Collections;
 using System.Collections.Generic;
-using Tobii.Research.Unity;
 using System.Linq;
-using System;
+using Tobii.Research.Unity;
 
 public class Timer : MonoBehaviour
 {
@@ -15,12 +15,12 @@ public class Timer : MonoBehaviour
     public GameObject menu;
     public Button startButton;
     public float countdownTime;
-    public AudioSource beepSound; // Add a field for the AudioSource
-    public TextMeshProUGUI collisionWarningText; // Reference to the collision warning message
+    public AudioSource beepSound;
+    public TextMeshProUGUI collisionWarningText;
 
     private float timeRemaining;
     private bool timerIsRunning = false;
-    private bool isCountdownFrozen = false; // Track if the countdown is frozen
+    private bool isCountdownFrozen = false;
     private StreamWriter summaryWriter;
 
     [Header("Input References")]
@@ -41,67 +41,75 @@ public class Timer : MonoBehaviour
     public TextMeshProUGUI errorMessageText;
     public GameObject drone;
 
-    // New field for the RenderTexture
     public RenderTexture renderTexture;
 
-    // New array for additional audio clips
-    public AudioClip[] additionalAudioClips;
-    private int currentAudioClipIndex = 0;
+    public AudioClip beepClip;
 
     private Dictionary<string, (float duration, int count)> inputSummary = new Dictionary<string, (float duration, int count)>();
-    private Dictionary<string, int> panelLookCount = new Dictionary<string, int>(); // Dictionary to track the number of times each panel has been looked at
     private bool isLoggingStarted = false;
     private bool previousSouthButtonState = false;
     private float sessionStartTime;
     private int screenshotCount = 0;
-    private int goodPhotoCount = 0;
-    private int doubleWarningCount = 0;
-    public int totalCollisions = 0;
-    public float collisionPercentage = 0f;
+    private int doubleWarningPhotoAttempts = 0;
+    private float collisionStartTime = 0f;
     private HashSet<GameObject> photographedBodies = new HashSet<GameObject>();
-    private List<int> beepTimes = new List<int> { 540, 480, 420, 360, 300, 240, 180, 120, 60, 30, 10 };
+    private HashSet<Vector2Int> visitedSquares = new HashSet<Vector2Int>();
+
     private float lastBeepTime = -1f;
+    private GridGenerator gridGenerator;
 
-    public void UpdateCollisionSummary(int collisionCount, float percentage)
-    {
-        totalCollisions = collisionCount;
-        collisionPercentage = percentage;
-    }
-
-    public void UpdateCountdownTime(float newCountdownTime)
-    {
-        countdownTime = newCountdownTime;
-    }
+    [Header("Debug Info")]
+    public int visitedSquaresCount;
 
     void Start()
     {
         startButton.onClick.AddListener(StartCountdown);
         recordButton.onClick.AddListener(StartLogging);
-        timeRemaining = countdownTime;
-        UpdateTimerDisplay(timeRemaining);
-        screenshotMessageText.gameObject.SetActive(false); // Hide the message at the start
-        errorMessageText.gameObject.SetActive(false); // Hide the error message at the start
+        InitializeUI();
+
+        // Initialize grid reference
+        gridGenerator = FindObjectOfType<GridGenerator>();
     }
 
     void Update()
     {
         if (timerIsRunning && !isCountdownFrozen)
         {
-            if (timeRemaining > 0)
-            {
-                timeRemaining -= Time.deltaTime;
-                UpdateTimerDisplay(timeRemaining);
-                GazeTrail.Instance?.UpdateCountdownValue(timeRemaining); // Update countdown value in GazeTrail
-                DronePathRecorder.Instance?.UpdateCountdownValue(timeRemaining); // Update countdown value in DronePathRecorder
-                DroneControl.Instance?.UpdateCountdownValue(timeRemaining); // Update countdown value in DroneControl
-                LogInput();
-                HandleBeepSound(); // Handle beep sound logic
-            }
-            else
-            {
-                EndSession();
-            }
+            UpdateCountdown();
         }
+
+        visitedSquaresCount = visitedSquares.Count;
+    }
+
+    private void InitializeUI()
+    {
+        timeRemaining = countdownTime;
+        UpdateTimerDisplay(timeRemaining);
+        screenshotMessageText.gameObject.SetActive(false);
+        errorMessageText.gameObject.SetActive(false);
+    }
+
+    private void UpdateCountdown()
+    {
+        if (timeRemaining > 0)
+        {
+            timeRemaining -= Time.deltaTime;
+            UpdateTimerDisplay(timeRemaining);
+            UpdateGazeAndDroneCountdown(timeRemaining);
+            LogInput();
+            HandleBeepSound();
+        }
+        else
+        {
+            EndSession();
+        }
+    }
+
+    private void UpdateGazeAndDroneCountdown(float time)
+    {
+        GazeTrail.Instance?.UpdateCountdownValue(time);
+        DronePathRecorder.Instance?.UpdateCountdownValue(time);
+        DroneControl.Instance?.UpdateCountdownValue(time);
     }
 
     public void FreezeCountdown()
@@ -126,11 +134,14 @@ public class Timer : MonoBehaviour
             timerIsRunning = true;
             timeRemaining = countdownTime;
             menu.SetActive(false);
-            sessionStartTime = Time.time;  // Store the start time
+            sessionStartTime = Time.time;
             StartLogging();
-            StartGazeRecording(); // Start recording gaze data
-            StartDronePathRecording(); // Start recording drone path data
-            StartInputLogging(); // Start recording input data
+            StartGazeRecording();
+            StartDronePathRecording();
+            StartInputLogging();
+
+            // Clear visited squares
+            visitedSquares.Clear();
         }
     }
 
@@ -138,30 +149,50 @@ public class Timer : MonoBehaviour
     {
         if (!isLoggingStarted && timerIsRunning)
         {
-            isLoggingStarted = true; // Set to true to avoid multiple logs
+            isLoggingStarted = true;
             InitializeWriters();
         }
     }
 
     private void InitializeWriters()
     {
+        string folderPath = GetExperimentFolderPath();
+        if (summaryWriter != null) summaryWriter.Close();
+
+        string summaryFileName = GetSummaryFileName();
+        summaryWriter = new StreamWriter(Path.Combine(folderPath, summaryFileName), false);
+        summaryWriter.WriteLine("ParticipantID,StrategyUsed,EnvironmentUsed,LeftStickUsageDuration,RightStickUsageDuration,DPadUpUsageDuration,DPadDownUsageDuration,SouthButtonPressed,TotalCollisions,TotalTimeInCollision,BodyFounded,DoubleWarningPhotoAttempts,TotalSquaresVisited,FpvPanelWatchTime,VisionAssistPanelWatchTime,VirtualTpvLowQualityWatchTime,VirtualTpvHighQualityWatchTime,MapWatchTime");
+    }
+
+    private string GetParticipantFolderPath()
+    {
         string participantID = participantIDInput.text;
         if (string.IsNullOrEmpty(participantID))
         {
             Debug.LogError("Participant ID is empty.");
-            return;
+            return string.Empty;
         }
         DateTime currentDate = DateTime.Now;
         string formattedDate = currentDate.ToString("ddMMyyyy");
-        string folderPath = Path.Combine(Application.dataPath, $"Participant_{participantID}_{formattedDate}");
-        Directory.CreateDirectory(folderPath); // This will only create if not exist
+        string folderPath = Path.Combine(Application.dataPath, $"{participantID}_{formattedDate}");
+        Directory.CreateDirectory(folderPath);
+        return folderPath;
+    }
 
-        if (summaryWriter != null)
-        {
-            summaryWriter.Close();
-        }
-        string summaryFileName = $"Summary_{participantIDInput.text}_{environmentDropdown.options[environmentDropdown.value].text}_{strategyDropdown.options[strategyDropdown.value].text}.txt";
-        summaryWriter = new StreamWriter(Path.Combine(folderPath, summaryFileName), false); // Open new file for each session
+    private string GetExperimentFolderPath()
+    {
+        string participantFolderPath = GetParticipantFolderPath();
+        string strategyUsed = strategyDropdown.options[strategyDropdown.value].text;
+        string environmentUsed = environmentDropdown.options[environmentDropdown.value].text;
+        string experimentFolderPath = Path.Combine(participantFolderPath, $"{strategyUsed}_{environmentUsed}");
+        Directory.CreateDirectory(experimentFolderPath);
+        return experimentFolderPath;
+    }
+
+    private string GetSummaryFileName()
+    {
+        string participantID = participantIDInput.text;
+        return $"Summary_{participantID}_{strategyDropdown.options[strategyDropdown.value].text}_{environmentDropdown.options[environmentDropdown.value].text}.csv";
     }
 
     private void LogInput()
@@ -172,42 +203,52 @@ public class Timer : MonoBehaviour
         float dpadDownValue = dpaddown.action.ReadValue<float>();
         bool currentSouthButtonState = southbutton.action.ReadValue<float>() > 0;
 
-        // Check if any input has occurred
-        if (leftStickValues != Vector2.zero || rightStickValues != Vector2.zero || dpadUpValue != 0 || dpadDownValue != 0 || currentSouthButtonState != previousSouthButtonState)
+        if (IsInputOccurred(leftStickValues, rightStickValues, dpadUpValue, dpadDownValue, currentSouthButtonState))
         {
-            // Update the summary for input usage
-            UpdateInputSummary("LeftStick", leftStickValues);
-            UpdateInputSummary("RightStick", rightStickValues);
-            UpdateInputSummary("DPadUp", new Vector2(dpadUpValue, 0));
-            UpdateInputSummary("DPadDown", new Vector2(dpadDownValue, 0));
-
-            // Specific handling for South Button press
-            if (currentSouthButtonState && !previousSouthButtonState)
-            {
-                UpdateInputSummary("SouthButton", new Vector2(1, 0));
-                GameObject nearestBody = GetNearestBody();
-                if (nearestBody != null)
-                {
-                    if (!photographedBodies.Contains(nearestBody))
-                    {
-                        photographedBodies.Add(nearestBody);
-                        goodPhotoCount++;
-                        TakeScreenshot();  // Capture screenshot when the button is pressed and drone is close enough
-                    }
-                    else
-                    {
-                        doubleWarningCount++;
-                        DisplayWarningMessage();  // Display warning message if the body is already photographed
-                    }
-                }
-                else
-                {
-                    DisplayErrorMessage();  // Display error message if the drone is too far
-                }
-            }
+            UpdateInputSummaries(leftStickValues, rightStickValues, dpadUpValue, dpadDownValue, currentSouthButtonState);
+            HandleSouthButtonPress(currentSouthButtonState);
         }
 
         previousSouthButtonState = currentSouthButtonState;
+    }
+
+    private bool IsInputOccurred(Vector2 leftStick, Vector2 rightStick, float dpadUp, float dpadDown, bool southButton)
+    {
+        return leftStick != Vector2.zero || rightStick != Vector2.zero || dpadUp != 0 || dpadDown != 0 || southButton != previousSouthButtonState;
+    }
+
+    private void UpdateInputSummaries(Vector2 leftStick, Vector2 rightStick, float dpadUp, float dpadDown, bool southButton)
+    {
+        UpdateInputSummary("LeftStick", leftStick);
+        UpdateInputSummary("RightStick", rightStick);
+        UpdateInputSummary("DPadUp", new Vector2(dpadUp, 0));
+        UpdateInputSummary("DPadDown", new Vector2(dpadDown, 0));
+        if (southButton && !previousSouthButtonState) UpdateInputSummary("SouthButton", Vector2.one);
+    }
+
+    private void HandleSouthButtonPress(bool currentSouthButtonState)
+    {
+        if (currentSouthButtonState && !previousSouthButtonState)
+        {
+            GameObject nearestBody = GetNearestBody();
+            if (nearestBody != null)
+            {
+                if (!photographedBodies.Contains(nearestBody))
+                {
+                    photographedBodies.Add(nearestBody);
+                    TakeScreenshot();
+                }
+                else
+                {
+                    doubleWarningPhotoAttempts++; // Increment double warning photo attempts
+                    DisplayWarningMessage();
+                }
+            }
+            else
+            {
+                DisplayErrorMessage();
+            }
+        }
     }
 
     private void UpdateInputSummary(string inputName, Vector2 inputValues)
@@ -226,51 +267,17 @@ public class Timer : MonoBehaviour
     private GameObject GetNearestBody()
     {
         GameObject[] bodies = GameObject.FindGameObjectsWithTag("BODY");
-        GameObject nearestBody = null;
-        float minDistance = float.MaxValue;
-
-        foreach (var body in bodies)
-        {
-            float distance = Vector3.Distance(drone.transform.position, body.transform.position);
-            if (distance < 3.0f && distance < minDistance)
-            {
-                minDistance = distance;
-                nearestBody = body;
-            }
-        }
-
-        return nearestBody;
+        return bodies.OrderBy(body => Vector3.Distance(drone.transform.position, body.transform.position))
+                     .FirstOrDefault(body => Vector3.Distance(drone.transform.position, body.transform.position) < 4.0f);
     }
 
     private void TakeScreenshot()
     {
-        // Increment screenshot counter
         screenshotCount++;
-
-        // Build the screenshot file name
-        string screenshotFileName = $"Screenshot_{participantIDInput.text}_{environmentDropdown.options[environmentDropdown.value].text}_{strategyDropdown.options[strategyDropdown.value].text}_{screenshotCount}.jpg";
-
-        string participantID = participantIDInput.text;
-        if (string.IsNullOrEmpty(participantID))
-        {
-            Debug.LogError("Participant ID is empty.");
-            return;
-        }
-        DateTime currentDate = DateTime.Now;
-        string formattedDate = currentDate.ToString("ddMMyyyy");
-        string folderPath = Path.Combine(Application.dataPath, $"Participant_{participantID}_{formattedDate}");
-
-        string screenshotPath = Path.Combine(folderPath, screenshotFileName);
-
-        // Capture the screenshot
+        string screenshotFileName = $"Screenshot_{participantIDInput.text}_{strategyDropdown.options[strategyDropdown.value].text}_{environmentDropdown.options[environmentDropdown.value].text}_{screenshotCount}.jpg";
+        string screenshotPath = Path.Combine(GetExperimentFolderPath(), screenshotFileName);
         ScreenCapture.CaptureScreenshot(screenshotPath);
-
-        Debug.Log($"Screenshot taken: {screenshotPath}");
-
-        // Instantiate the prefab at the rawImage position
         InstantiatePrefabAtRawImagePosition();
-
-        // Start coroutine to display screenshot message
         StartCoroutine(DisplayScreenshotMessage());
     }
 
@@ -278,10 +285,7 @@ public class Timer : MonoBehaviour
     {
         if (screenshotPrefab != null && screenshotCanvas != null)
         {
-            // Instantiate the prefab
             GameObject instantiatedPrefab = Instantiate(screenshotPrefab, screenshotCanvas.transform);
-
-            // Position the instantiated prefab at the rawImage position
             RectTransform rawImageRect = FollowDrone.Instance.rawImage.rectTransform;
             instantiatedPrefab.GetComponent<RectTransform>().anchoredPosition = rawImageRect.anchoredPosition;
         }
@@ -317,19 +321,11 @@ public class Timer : MonoBehaviour
     {
         HideScreenshotMessage();
         HideErrorMessage();
-
-        // Define the color orange
-        Color orangeColor = new Color(1f, 0.5f, 0f);
-
-        // Change text color to orange
-        screenshotMessageText.color = orangeColor;
-
+        screenshotMessageText.color = new Color(1f, 0.5f, 0f);
         screenshotMessageText.text = "This body has already been photographed!";
         screenshotMessageText.gameObject.SetActive(true);
         yield return new WaitForSeconds(3);
         screenshotMessageText.gameObject.SetActive(false);
-
-        // Reset text color to its original color (assuming it's white)
         screenshotMessageText.color = Color.white;
         screenshotMessageText.text = "Screenshot captured successfully!";
     }
@@ -346,88 +342,79 @@ public class Timer : MonoBehaviour
 
     private void HandleBeepSound()
     {
-        if (beepSound != null)
+        if (beepSound != null && beepClip != null)
         {
             int roundedTimeRemaining = Mathf.CeilToInt(timeRemaining);
 
-            // Play beep at each minute (09:00, 08:00, etc.)
-            if (beepTimes.Contains(roundedTimeRemaining))
+            if (roundedTimeRemaining <= 30)
             {
-                beepSound.Play();
-                PlayNextAudioClip(); // Play the next audio clip
-                beepTimes.Remove(roundedTimeRemaining); // Remove to avoid replaying at the same time
+                if (roundedTimeRemaining <= 10)
+                {
+                    if (Time.time - lastBeepTime >= 1f)
+                    {
+                        beepSound.clip = beepClip;
+                        beepSound.Play();
+                        lastBeepTime = Time.time;
+                    }
+                }
+                else if (roundedTimeRemaining % 5 == 0 && Time.time - lastBeepTime >= 1f)
+                {
+                    beepSound.clip = beepClip;
+                    beepSound.Play();
+                    lastBeepTime = Time.time;
+                }
             }
 
-            // Play beep every second during the last 30 seconds
-            if (roundedTimeRemaining <= 30 && roundedTimeRemaining > 0 && Time.time - lastBeepTime >= 1f)
+            // Beep sound every minute
+            if (roundedTimeRemaining % 60 == 0 && Time.time - lastBeepTime >= 1f)
             {
+                beepSound.clip = beepClip;
                 beepSound.Play();
                 lastBeepTime = Time.time;
             }
         }
     }
 
-    private void PlayNextAudioClip()
-    {
-        if (additionalAudioClips != null && additionalAudioClips.Length > 0)
-        {
-            // Get the next audio clip from the array
-            AudioClip nextClip = additionalAudioClips[currentAudioClipIndex];
-
-            // Play the next audio clip
-            beepSound.clip = nextClip;
-            beepSound.Play();
-
-            // Update the index for the next clip
-            currentAudioClipIndex = (currentAudioClipIndex + 1) % additionalAudioClips.Length;
-        }
-    }
-
     private void EndSession()
     {
         timerIsRunning = false;
-        isLoggingStarted = false; // Reset the flag for the next session
+        isLoggingStarted = false;
         UpdateTimerDisplay(0);
         menu.SetActive(true);
         FinalizeLogging();
-        SaveRenderTexture(); // Save the render texture as a JPG file
-        StopGazeRecording(); // Stop recording gaze data
-        StopDronePathRecording(); // Stop recording drone path data
-        StopInputLogging(); // Stop recording input data
+        SaveRenderTexture();
+        StopGazeRecording();
+        StopDronePathRecording();
+        StopInputLogging();
     }
 
     private void FinalizeLogging()
     {
         if (summaryWriter != null)
         {
-            foreach (var item in inputSummary)
-            {
-                if (item.Key == "SouthButton")
-                {
-                    // For South Button, log both count and duration
-                    summaryWriter.WriteLine($"{item.Key} was pressed {item.Value.count} times.");
-                }
-                else
-                {
-                    // For other inputs, log only the duration
-                    summaryWriter.WriteLine($"{item.Key} was used for a total of {item.Value.duration} seconds.");
-                }
-            }
+            string participantID = participantIDInput.text;
+            string environmentUsed = environmentDropdown.options[environmentDropdown.value].text;
+            string strategyUsed = strategyDropdown.options[strategyDropdown.value].text;
 
-            // Write collision data to summary file
-            summaryWriter.WriteLine($"Total Collisions: {totalCollisions}");
-            summaryWriter.WriteLine($"Collision Percentage of Countdown Time: {collisionPercentage}%");
+            // Fetching input durations
+            float leftStickUsageDuration = inputSummary.ContainsKey("LeftStick") ? inputSummary["LeftStick"].duration : 0f;
+            float rightStickUsageDuration = inputSummary.ContainsKey("RightStick") ? inputSummary["RightStick"].duration : 0f;
+            float dpadUpUsageDuration = inputSummary.ContainsKey("DPadUp") ? inputSummary["DPadUp"].duration : 0f;
+            float dpadDownUsageDuration = inputSummary.ContainsKey("DPadDown") ? inputSummary["DPadDown"].duration : 0f;
+            int southButtonPressed = inputSummary.ContainsKey("SouthButton") ? inputSummary["SouthButton"].count : 0;
 
-            // Write panel look count data to summary file
-            foreach (var panel in panelLookCount)
-            {
-                summaryWriter.WriteLine($"{panel.Key} was looked at {panel.Value} times.");
-            }
+            // Fetching panel watch times from GazeTrail
+            float fpvPanelWatchTime = GazeTrail.Instance.fpvWatchTime;
+            float visionAssistPanelWatchTime = GazeTrail.Instance.visionAssistWatchTime;
+            float virtualTpvLowQualityWatchTime = GazeTrail.Instance.virtualTpvLowQualityWatchTime;
+            float virtualTpvHighQualityWatchTime = GazeTrail.Instance.virtualTpvHighQualityWatchTime;
+            float mapWatchTime = GazeTrail.Instance.mapWatchTime;
 
-            // Write photo data to summary file
-            summaryWriter.WriteLine($"Good Photos Taken: {goodPhotoCount}");
-            summaryWriter.WriteLine($"Double Warning Photo Attempts: {doubleWarningCount}");
+            // Fetching collision data from DroneCollisionDetector
+            float totalCollisionTime = droneCollisionDetector.totalCollisionTime;
+            int totalCollisions = droneCollisionDetector.CollisionNumber;
 
+            summaryWriter.WriteLine($"{participantID},{strategyUsed},{environmentUsed},{leftStickUsageDuration},{rightStickUsageDuration},{dpadUpUsageDuration},{dpadDownUsageDuration},{southButtonPressed},{totalCollisions},{totalCollisionTime},{photographedBodies.Count},{doubleWarningPhotoAttempts},{visitedSquares.Count},{fpvPanelWatchTime},{visionAssistPanelWatchTime},{virtualTpvLowQualityWatchTime},{virtualTpvHighQualityWatchTime},{mapWatchTime}");
             summaryWriter.Close();
             summaryWriter = null;
         }
@@ -435,69 +422,23 @@ public class Timer : MonoBehaviour
 
     private void SaveRenderTexture()
     {
-        if (renderTexture != null)
-        {
-            // Create a new Texture2D with the same dimensions as the RenderTexture
-            Texture2D texture = new Texture2D(renderTexture.width, renderTexture.height, TextureFormat.RGB24, false);
+        Texture2D texture = new Texture2D(renderTexture.width, renderTexture.height, TextureFormat.RGB24, false);
+        RenderTexture.active = renderTexture;
+        texture.ReadPixels(new Rect(0, 0, renderTexture.width, renderTexture.height), 0, 0);
+        texture.Apply();
+        RenderTexture.active = null;
 
-            // Copy the RenderTexture content to the Texture2D
-            RenderTexture.active = renderTexture;
-            texture.ReadPixels(new Rect(0, 0, renderTexture.width, renderTexture.height), 0, 0);
-            texture.Apply();
-            RenderTexture.active = null;
-
-            // Encode the Texture2D to a JPG
-            byte[] bytes = texture.EncodeToJPG();
-
-            // Build the file path
-            string participantID = participantIDInput.text;
-            if (string.IsNullOrEmpty(participantID))
-            {
-                Debug.LogError("Participant ID is empty.");
-                return;
-            }
-            DateTime currentDate = DateTime.Now;
-            string formattedDate = currentDate.ToString("ddMMyyyy");
-            string folderPath = Path.Combine(Application.dataPath, $"Participant_{participantID}_{formattedDate}");
-            string fileName = $"RenderTexture_{participantIDInput.text}_{environmentDropdown.options[environmentDropdown.value].text}_{strategyDropdown.options[strategyDropdown.value].text}.jpg";
-            string filePath = Path.Combine(folderPath, fileName);
-
-            // Save the encoded JPG to the file
-            File.WriteAllBytes(filePath, bytes);
-
-            Debug.Log($"RenderTexture saved as JPG: {filePath}");
-        }
-        else
-        {
-            Debug.LogError("RenderTexture is not assigned.");
-        }
-    }
-
-    public void UpdatePanelLookCount(string panelName)
-    {
-        if (!panelLookCount.ContainsKey(panelName))
-        {
-            panelLookCount[panelName] = 0;
-        }
-        panelLookCount[panelName]++;
-    }
-
-    public void SetSessionStartTime(float time)
-    {
-        sessionStartTime = time;
-    }
-
-    public float GetSessionStartTime()
-    {
-        return sessionStartTime;
+        byte[] bytes = texture.EncodeToJPG();
+        string filePath = Path.Combine(GetExperimentFolderPath(), $"Map_{participantIDInput.text}_{strategyDropdown.options[strategyDropdown.value].text}_{environmentDropdown.options[environmentDropdown.value].text}.jpg");
+        File.WriteAllBytes(filePath, bytes);
     }
 
     private void OnApplicationQuit()
     {
-        FinalizeLogging(); // Ensures all logs are properly closed when application quits
-        StopGazeRecording(); // Stop recording gaze data
-        StopDronePathRecording(); // Stop recording drone path data
-        StopInputLogging(); // Stop recording input data
+        FinalizeLogging();
+        StopGazeRecording();
+        StopDronePathRecording();
+        StopInputLogging();
     }
 
     private void UpdateTimerDisplay(float timeToDisplay)
@@ -512,17 +453,7 @@ public class Timer : MonoBehaviour
     {
         if (GazeTrail.Instance != null)
         {
-            string participantID = participantIDInput.text;
-            if (string.IsNullOrEmpty(participantID))
-            {
-                Debug.LogError("Participant ID is empty.");
-                return;
-            }
-            DateTime currentDate = DateTime.Now;
-            string formattedDate = currentDate.ToString("ddMMyyyy");
-            string folderPath = Path.Combine(Application.dataPath, $"Participant_{participantID}_{formattedDate}");
-            Directory.CreateDirectory(folderPath); // Create directory if it doesn't exist
-            string filePath = Path.Combine(folderPath, $"GazeData_{participantIDInput.text}_{environmentDropdown.options[environmentDropdown.value].text}_{strategyDropdown.options[strategyDropdown.value].text}.csv");
+            string filePath = Path.Combine(GetExperimentFolderPath(), $"GazeData_{participantIDInput.text}_{strategyDropdown.options[strategyDropdown.value].text}_{environmentDropdown.options[environmentDropdown.value].text}.csv");
             GazeTrail.Instance.StartRecording(filePath);
         }
     }
@@ -539,17 +470,7 @@ public class Timer : MonoBehaviour
     {
         if (DronePathRecorder.Instance != null)
         {
-            string participantID = participantIDInput.text;
-            if (string.IsNullOrEmpty(participantID))
-            {
-                Debug.LogError("Participant ID is empty.");
-                return;
-            }
-            DateTime currentDate = DateTime.Now;
-            string formattedDate = currentDate.ToString("ddMMyyyy");
-            string folderPath = Path.Combine(Application.dataPath, $"Participant_{participantID}_{formattedDate}");
-            Directory.CreateDirectory(folderPath); // Create directory if it doesn't exist
-            string filePath = Path.Combine(folderPath, $"PathData_{participantIDInput.text}_{environmentDropdown.options[environmentDropdown.value].text}_{strategyDropdown.options[strategyDropdown.value].text}.csv");
+            string filePath = Path.Combine(GetExperimentFolderPath(), $"PathData_{participantIDInput.text}_{strategyDropdown.options[strategyDropdown.value].text}_{environmentDropdown.options[environmentDropdown.value].text}.csv");
             DronePathRecorder.Instance.StartRecording(filePath);
         }
     }
@@ -566,17 +487,7 @@ public class Timer : MonoBehaviour
     {
         if (DroneControl.Instance != null)
         {
-            string participantID = participantIDInput.text;
-            if (string.IsNullOrEmpty(participantID))
-            {
-                Debug.LogError("Participant ID is empty.");
-                return;
-            }
-            DateTime currentDate = DateTime.Now;
-            string formattedDate = currentDate.ToString("ddMMyyyy");
-            string folderPath = Path.Combine(Application.dataPath, $"Participant_{participantID}_{formattedDate}");
-            Directory.CreateDirectory(folderPath); // Create directory if it doesn't exist
-            string filePath = Path.Combine(folderPath, $"GamepadInputLog_{participantIDInput.text}_{environmentDropdown.options[environmentDropdown.value].text}_{strategyDropdown.options[strategyDropdown.value].text}.csv");
+            string filePath = Path.Combine(GetExperimentFolderPath(), $"GamepadInputLog_{participantIDInput.text}_{strategyDropdown.options[strategyDropdown.value].text}_{environmentDropdown.options[environmentDropdown.value].text}.csv");
             DroneControl.Instance.StartInputLogging(filePath);
         }
     }
@@ -587,5 +498,24 @@ public class Timer : MonoBehaviour
         {
             DroneControl.Instance.StopInputLogging();
         }
+    }
+
+    public void RecordVisitedSquare(Vector3 position)
+    {
+        if (timerIsRunning && gridGenerator != null)
+        {
+            Vector2Int gridSquare = gridGenerator.GetGridSquare(position);
+            visitedSquares.Add(gridSquare);
+        }
+    }
+
+    public bool IsTimerRunning()
+    {
+        return timerIsRunning;
+    }
+
+    public float GetTimeRemaining()
+    {
+        return timeRemaining;
     }
 }

@@ -189,9 +189,6 @@ public class DroneControl : MonoBehaviour
         // Check if the joystick is in the upper or lower part
         bool isInUpperOrLowerPart = IsInUpperOrLowerPart(_leftStickInput);
 
-        // Debug.Log($"Right Stick Input: {_rightStickInput}");
-        // Debug.Log($"Left Stick Input: {_leftStickInput}");
-
         // Apply rotation only if the joystick is not in the upper or lower part
         if (!isInUpperOrLowerPart)
         {
@@ -261,12 +258,7 @@ public class DroneControl : MonoBehaviour
         {
             finalVelocity = desiredMovement;
         }
-
-        // Apply the calculated velocity to the Rigidbody
         body.velocity = finalVelocity;
-        //
-        // Debug.Log($"Applying Movement: {finalVelocity}");
-        // Debug.Log($"Rigidbody Velocity: {body.velocity}");
     }
 
     private void UpdateTargetPositionWithNoise()

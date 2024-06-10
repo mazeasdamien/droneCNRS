@@ -2,14 +2,13 @@ using UnityEngine;
 
 public class MatchPO : MonoBehaviour
 {
-    public Transform target; // Assign the first GameObject’s Transform in the Inspector
+    public Transform target;
 
     private Vector3 positionOffset;
     private Quaternion rotationOffset;
 
     void Start()
     {
-        // Calculate initial offset
         if (target != null)
         {
             positionOffset = transform.position - target.position;
@@ -21,7 +20,6 @@ public class MatchPO : MonoBehaviour
     {
         if (target != null)
         {
-            // Match position and rotation considering the initial offset
             transform.position = target.position + positionOffset;
             transform.rotation = target.rotation * rotationOffset;
         }

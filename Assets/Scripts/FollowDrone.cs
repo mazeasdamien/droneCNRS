@@ -4,17 +4,17 @@ using UnityEngine.UI;
 
 public class FollowDrone : MonoBehaviour
 {
-    public static FollowDrone Instance { get; private set; } // Singleton instance
+    public static FollowDrone Instance { get; private set; }
     public Transform droneTransform;
     public RawImage rawImage;
     public Camera mainCamera;
     public LineRenderer lineRenderer;
 
-    private List<Vector3> positions = new List<Vector3>();  // List to store positions
+    private List<Vector3> positions = new List<Vector3>();
 
     void Awake()
     {
-        Instance = this; // Assign the singleton instance
+        Instance = this;
     }
 
     void Start()
@@ -23,10 +23,8 @@ public class FollowDrone : MonoBehaviour
         {
             lineRenderer = GetComponent<LineRenderer>();
         }
-
-        // Configure the line renderer to use the UI material and potentially adjust other settings
-        lineRenderer.material = new Material(Shader.Find("UI/Default"));  // Make sure this shader works with UI if not find an appropriate one
-        lineRenderer.useWorldSpace = false;  // Use local space which corresponds to the canvas space
+        lineRenderer.material = new Material(Shader.Find("UI/Default"));
+        lineRenderer.useWorldSpace = false;
     }
 
     void Update()
@@ -44,8 +42,7 @@ public class FollowDrone : MonoBehaviour
 
         if (positions.Count == 0 || Vector3.Distance(positions[positions.Count - 1], canvasPosition) > 1f)
         {
-            positions.Add(canvasPosition);  // Store canvas position instead of world position
-
+            positions.Add(canvasPosition);
             lineRenderer.positionCount = positions.Count;
             lineRenderer.SetPositions(positions.ConvertAll(p => (Vector3)p).ToArray());
         }

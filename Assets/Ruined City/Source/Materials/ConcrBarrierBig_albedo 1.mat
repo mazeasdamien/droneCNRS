@@ -10,16 +10,17 @@ Material:
   m_Name: ConcrBarrierBig_albedo 1
   m_Shader: {fileID: 4800000, guid: 6e4ae4064600d784cac1e41a9e6f2e59, type: 3}
   m_Parent: {fileID: 2100000, guid: 1335240b51bac5145887182ceb3bea43, type: 2}
-  m_ModifiedSerializedProperties: 2
+  m_ModifiedSerializedProperties: 10
   m_ValidKeywords:
   - _DISABLE_SSR_TRANSPARENT
+  - _DOUBLESIDED_ON
   - _MASKMAP
   - _NORMALMAP
   - _NORMALMAP_TANGENT_SPACE
   m_InvalidKeywords: []
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
-  m_DoubleSidedGI: 0
+  m_DoubleSidedGI: 1
   m_CustomRenderQueue: -1
   stringTagMap: {}
   disabledShaderPasses:
@@ -63,6 +64,9 @@ Material:
     m_Ints: []
     m_Floats:
     - _BumpScale: -1.05
+    - _CullMode: 0
+    - _CullModeForward: 0
+    - _DoubleSidedEnable: 1
     - _GlossMapScale: 0.664
     - _MaterialID: 1
     - _Metallic: 1

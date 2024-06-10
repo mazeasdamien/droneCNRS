@@ -1,22 +1,33 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using TMPro;
 
 public class DroneCollisionDetector : MonoBehaviour
 {
-    private bool isColliding = false; // Track if a collision is ongoing
-    public Timer timerScript; // Reference to Timer script
+    private bool isColliding = false;
+    public Timer timerScript;
+    public TextMeshProUGUI collisionText;
+    public float totalCollisionTime;
+    public int CollisionNumber;
+
+    private float collisionStartTime;
+    private float lastCollisionTime = -5f;
 
     private void OnCollisionEnter(Collision collision)
     {
         if (collision.gameObject.CompareTag("environment"))
         {
-            if (!isColliding)
+            if (!isColliding && timerScript.IsTimerRunning())
             {
                 isColliding = true;
+                collisionStartTime = timerScript.GetTimeRemaining();
                 VibrateGamepad();
                 Debug.Log("Collision Enter Detected");
-                timerScript.FreezeCountdown(); // Freeze the countdown
-                timerScript.DisplayCollisionWarning(true); // Show warning message
+                if (collisionText != null)
+                {
+                    collisionText.text = "CRASH!";
+                    collisionText.gameObject.SetActive(true);
+                }
             }
         }
     }
@@ -25,9 +36,23 @@ public class DroneCollisionDetector : MonoBehaviour
     {
         if (collision.gameObject.CompareTag("environment"))
         {
-            isColliding = false;
-            timerScript.UnfreezeCountdown(); // Unfreeze the countdown
-            timerScript.DisplayCollisionWarning(false); // Hide warning message
+            if (isColliding && timerScript.IsTimerRunning())
+            {
+                isColliding = false;
+                float collisionEndTime = timerScript.GetTimeRemaining();
+                totalCollisionTime += collisionStartTime - collisionEndTime;
+
+                if (Time.time - lastCollisionTime >= 5f)
+                {
+                    CollisionNumber++;
+                    lastCollisionTime = Time.time;
+                }
+
+                if (collisionText != null)
+                {
+                    collisionText.gameObject.SetActive(false);
+                }
+            }
         }
     }
 
@@ -36,8 +61,8 @@ public class DroneCollisionDetector : MonoBehaviour
         Gamepad gamepad = Gamepad.current;
         if (gamepad != null)
         {
-            gamepad.SetMotorSpeeds(0.5f, 0.5f); // Vibrate at half intensity for both motors
-            Invoke(nameof(StopVibration), 0.5f); // Stop after 0.5 seconds
+            gamepad.SetMotorSpeeds(0.5f, 0.5f);
+            Invoke(nameof(StopVibration), 0.5f);
         }
     }
 
