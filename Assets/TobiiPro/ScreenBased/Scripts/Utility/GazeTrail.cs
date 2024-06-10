@@ -294,15 +294,15 @@ namespace Tobii.Research.Unity
 
         private string GetAvailableFilePath(string folderPath, string baseFileName)
         {
-            int fileIndex = 1;
-            string filePath;
-            do
-            {
-                filePath = Path.Combine(folderPath, $"{baseFileName}{fileIndex}.csv");
-                fileIndex++;
-            } while (File.Exists(filePath));
+            string filePathStart = Path.Combine(folderPath, $"{baseFileName}start.csv");
+            string filePathEnd = Path.Combine(folderPath, $"{baseFileName}end.csv");
 
-            return filePath;
+            if (!File.Exists(filePathStart))
+            {
+                return filePathStart;
+            }
+
+            return filePathEnd;
         }
 
         private void StopRecordingAndHideBlackScreen()
