@@ -126,11 +126,11 @@ namespace Tobii.Research.Unity
 
                     if (gazePosition.x >= leftBound && gazePosition.x <= rightBound)
                     {
-                        if (gazePosition.y >= (Screen.height - panelHeight) / 2 && gazePosition.y <= (Screen.height + panelHeight) / 2)
+                        if (gazePosition.y > (Screen.height / 2))
                         {
                             panelNameLooked = "FPV";
                         }
-                        else if (gazePosition.y >= (Screen.height - panelHeight * 1.5f) / 2 && gazePosition.y <= (Screen.height - panelHeight / 2) / 2)
+                        else
                         {
                             panelNameLooked = "Vision_Assist";
                         }
