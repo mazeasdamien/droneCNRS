@@ -51,7 +51,6 @@ public class Timer : MonoBehaviour
     private float sessionStartTime;
     private int screenshotCount = 0;
     private int doubleWarningPhotoAttempts = 0;
-    private float collisionStartTime = 0f;
     private HashSet<GameObject> photographedBodies = new HashSet<GameObject>();
     private HashSet<Vector2Int> visitedSquares = new HashSet<Vector2Int>();
 
