@@ -82,8 +82,15 @@ namespace Tobii.Research.Unity
         {
             Debug.Log("Gaze data not valid.");
             var data = _eyeTracker.LatestGazeData;
-            Vector2 gazePointOnDisplay = new(data.Left.GazePointOnDisplayArea.x, data.Left.GazePointOnDisplayArea.y);
-            Debug.Log(gazePointOnDisplay.x + "  " + gazePointOnDisplay.y);
+            Vector2 gazePointOnDisplayl = new(data.Left.GazePointOnDisplayArea.x, data.Left.GazePointOnDisplayArea.y);
+            Vector2 gazePointOnDisplayr = new(data.Right.GazePointOnDisplayArea.x, data.Right.GazePointOnDisplayArea.y);
+
+            // Calculate the mean gaze position
+            Vector2 meanGazePointOnDisplay = new Vector2(
+                (gazePointOnDisplayl.x + gazePointOnDisplayr.x) / 2,
+                (gazePointOnDisplayl.y + gazePointOnDisplayr.y) / 2
+            );
+            Debug.Log(meanGazePointOnDisplay.x + "  " + meanGazePointOnDisplay.y);
         }
 
         private void UpdateGazeCursor()
@@ -93,8 +100,15 @@ namespace Tobii.Research.Unity
             var data = _eyeTracker.LatestGazeData;
             if (data.CombinedGazeRayScreenValid)
             {
-                Vector2 gazePointOnDisplay = new(data.Left.GazePointOnDisplayArea.x, data.Left.GazePointOnDisplayArea.y);
-                Vector2 gazePosition = new(gazePointOnDisplay.x * Screen.width, (1 - gazePointOnDisplay.y) * Screen.height);
+                Vector2 gazePointOnDisplayl = new(data.Left.GazePointOnDisplayArea.x, data.Left.GazePointOnDisplayArea.y);
+                Vector2 gazePointOnDisplayr = new(data.Right.GazePointOnDisplayArea.x, data.Right.GazePointOnDisplayArea.y);
+
+                // Calculate the mean gaze position
+                Vector2 meanGazePointOnDisplay = new Vector2(
+                    (gazePointOnDisplayl.x + gazePointOnDisplayr.x) / 2,
+                    (gazePointOnDisplayl.y + gazePointOnDisplayr.y) / 2
+                );
+                Vector2 gazePosition = new(meanGazePointOnDisplay.x * Screen.width, (1 - meanGazePointOnDisplay.y) * Screen.height);
                 RectTransformUtility.ScreenPointToLocalPointInRectangle(gazeCursor.canvas.transform as RectTransform, gazePosition, Camera.main, out Vector2 localPosition);
                 gazeCursor.rectTransform.anchoredPosition = localPosition;
                 gazeText.text = $"Gaze Position: ({gazePosition.x}, {gazePosition.y})";
