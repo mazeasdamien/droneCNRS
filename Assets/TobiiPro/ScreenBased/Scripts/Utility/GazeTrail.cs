@@ -71,6 +71,19 @@ namespace Tobii.Research.Unity
             }
 
             UpdatePanelWatchTime();
+
+            if (Input.GetKeyDown(KeyCode.Space))
+            {
+                LogGazePosition();
+            }
+        }
+
+        private void LogGazePosition()
+        {
+            Debug.Log("Gaze data not valid.");
+            var data = _eyeTracker.LatestGazeData;
+            Vector2 gazePointOnDisplay = new(data.Left.GazePointOnDisplayArea.x, data.Left.GazePointOnDisplayArea.y);
+            Debug.Log(gazePointOnDisplay.x + "  " + gazePointOnDisplay.y);
         }
 
         private void UpdateGazeCursor()
@@ -213,9 +226,16 @@ namespace Tobii.Research.Unity
             DateTime dateTime = DateTime.UtcNow;
             string timestamp = dateTime.ToString("yyyy-MM-dd HH:mm:ss.fff");
 
-            Vector2 gazePointOnDisplay = new(data.Left.GazePointOnDisplayArea.x, data.Left.GazePointOnDisplayArea.y);
+            Vector2 gazePointOnDisplayl = new(data.Left.GazePointOnDisplayArea.x, data.Left.GazePointOnDisplayArea.y);
+            Vector2 gazePointOnDisplayr = new(data.Right.GazePointOnDisplayArea.x, data.Right.GazePointOnDisplayArea.y);
 
-            Vector2 gazePointInPixels = new(gazePointOnDisplay.x * Screen.height, (1 - gazePointOnDisplay.y) * Screen.width);
+            // Calculate the mean gaze position
+            Vector2 meanGazePointOnDisplay = new Vector2(
+                (gazePointOnDisplayl.x + gazePointOnDisplayr.x) / 2,
+                (gazePointOnDisplayl.y + gazePointOnDisplayr.y) / 2
+            );
+
+            Vector2 gazePointInPixels = new(meanGazePointOnDisplay.x * Screen.height, (1 - meanGazePointOnDisplay.y) * Screen.width);
 
             bool validLeftGaze = data.Left.GazePointValid;
             bool validRightGaze = data.Right.GazePointValid;
@@ -236,7 +256,7 @@ namespace Tobii.Research.Unity
             var rightGazePointOnDisplayArea = data.Right.GazePointOnDisplayArea;
             var rightGazeRayScreen = data.Right.GazeRayScreen;
 
-            gazeWriter.WriteLine($"{timestamp},{dateTime:yyyy-MM-dd HH:mm:ss.fff},{currentCountdown},{validLeftGaze},{validRightGaze},{gazePointOnDisplay.x},{gazePointOnDisplay.y},{gazePointInPixels.x},{gazePointInPixels.y},{validLeftPupil},{leftPupilDiameter},{validRightPupil},{rightPupilDiameter}," +
+            gazeWriter.WriteLine($"{timestamp},{dateTime:yyyy-MM-dd HH:mm:ss.fff},{currentCountdown},{validLeftGaze},{validRightGaze},{meanGazePointOnDisplay.x},{meanGazePointOnDisplay.y},{gazePointInPixels.x},{gazePointInPixels.y},{validLeftPupil},{leftPupilDiameter},{validRightPupil},{rightPupilDiameter}," +
                                  $"{leftGazeOriginInTrackBox.x},{leftGazeOriginInTrackBox.y},{leftGazeOriginInTrackBox.z},{leftGazeOriginInUser.x},{leftGazeOriginInUser.y},{leftGazeOriginInUser.z},{leftGazePointInUser.x},{leftGazePointInUser.y},{leftGazePointInUser.z},{leftGazePointOnDisplayArea.x},{leftGazePointOnDisplayArea.y},{leftGazeRayScreen.origin.x},{leftGazeRayScreen.origin.y},{leftGazeRayScreen.origin.z},{leftGazeRayScreen.direction.x},{leftGazeRayScreen.direction.y},{leftGazeRayScreen.direction.z}," +
                                  $"{rightGazeOriginInTrackBox.x},{rightGazeOriginInTrackBox.y},{rightGazeOriginInTrackBox.z},{rightGazeOriginInUser.x},{rightGazeOriginInUser.y},{rightGazeOriginInUser.z},{rightGazePointInUser.x},{rightGazePointInUser.y},{rightGazePointInUser.z},{rightGazePointOnDisplayArea.x},{rightGazePointOnDisplayArea.y},{rightGazeRayScreen.origin.x},{rightGazeRayScreen.origin.y},{rightGazeRayScreen.origin.z},{rightGazeRayScreen.direction.x},{rightGazeRayScreen.direction.y},{rightGazeRayScreen.direction.z},{panelNameLooked}");
         }
