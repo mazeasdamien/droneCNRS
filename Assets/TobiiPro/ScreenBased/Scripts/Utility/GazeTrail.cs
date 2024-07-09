@@ -30,6 +30,8 @@ namespace Tobii.Research.Unity
         private TextMeshProUGUI lookedAtText;
         [SerializeField]
         private TextMeshProUGUI invalidDataText; // Add a TextMeshProUGUI field for invalid data percentage
+        [SerializeField]
+        private TextMeshProUGUI linesWrittenText; // Add a TextMeshProUGUI field for number of lines written
 
         private StreamWriter gazeWriter;
         private bool isRecording = false;
@@ -50,6 +52,7 @@ namespace Tobii.Research.Unity
 
         private int totalDataPoints = 0; // Track total number of data points
         private int invalidDataPoints = 0; // Track number of invalid data points
+        private int linesWritten = 0; // Track number of lines written
 
         protected override void OnAwake()
         {
@@ -81,7 +84,6 @@ namespace Tobii.Research.Unity
             if (isRecording)
             {
                 RecordGazeData();
-                UpdateInvalidDataPercentage(); // Update the invalid data percentage in real time
             }
 
             UpdatePanelWatchTime();
@@ -264,11 +266,6 @@ namespace Tobii.Research.Unity
             if (!validLeftGaze || !validRightGaze)
             {
                 invalidDataPoints++;
-                if (timer.IsTimerRunning())
-                {
-                    UpdateInvalidDataPercentage();
-                }
-                return;
             }
 
             DateTime dateTime = DateTime.UtcNow;
@@ -290,16 +287,18 @@ namespace Tobii.Research.Unity
                 (gazePointOnDisplayl.y + gazePointOnDisplayr.y) / 2
             );
 
+            if (!data.Left.GazePointValid) meanGazePointOnDisplay = gazePointOnDisplayr;
+            if (!data.Right.GazePointValid) meanGazePointOnDisplay = gazePointOnDisplayl;
+
             lock (gazeWriter)
             {
                 gazeWriter.WriteLine($"{timestamp},{dateTime:yyyy-MM-dd HH:mm:ss.fff},{currentCountdown},{validLeftGaze},{validRightGaze},{meanGazePointOnDisplay.x},{meanGazePointOnDisplay.y},{gazePositionInPixels.x},{gazePositionInPixels.y}," +
                                      $"{validLeftPupil},{leftPupilDiameter},{validRightPupil},{rightPupilDiameter},{leftGazeData},{rightGazeData},{panelNameLooked}");
             }
 
-            if (timer.IsTimerRunning())
-            {
-                UpdateInvalidDataPercentage();
-            }
+            linesWritten++;
+            UpdateInvalidDataPercentage();
+            UpdateLinesWrittenText();
         }
 
         private string GetGazeDataString(IGazeDataEye gazeData)
@@ -315,6 +314,11 @@ namespace Tobii.Research.Unity
         {
             float invalidPercentage = (totalDataPoints == 0) ? 0 : ((float)invalidDataPoints / totalDataPoints) * 100;
             invalidDataText.text = $"{invalidPercentage:F2}% ({invalidDataPoints}/{totalDataPoints})";
+        }
+
+        private void UpdateLinesWrittenText()
+        {
+            linesWrittenText.text = $"Lines Written: {linesWritten}";
         }
 
         public void StartRecording(string filePath)

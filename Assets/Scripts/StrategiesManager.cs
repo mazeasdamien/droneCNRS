@@ -183,7 +183,7 @@ public class StrategiesManager : MonoBehaviour
                 SetActiveGameObjects(Low, false);
                 if (tmpText != null)
                 {
-                    tmpText.rectTransform.localPosition = strategy4Position;
+                    tmpText.rectTransform.localPosition = strategy1Position;
                 }
                 ResetPath();
                 break;
