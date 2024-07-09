@@ -28,6 +28,8 @@ namespace Tobii.Research.Unity
         private TMP_Dropdown strategyDropdown;
         [SerializeField]
         private TextMeshProUGUI lookedAtText;
+        [SerializeField]
+        private TextMeshProUGUI invalidDataText; // Add a TextMeshProUGUI field for invalid data percentage
 
         private StreamWriter gazeWriter;
         private bool isRecording = false;
@@ -46,6 +48,9 @@ namespace Tobii.Research.Unity
         private float lastGazeTimeUpdate = 0f;
         private string lastPanelNameLooked = "None";
 
+        private int totalDataPoints = 0; // Track total number of data points
+        private int invalidDataPoints = 0; // Track number of invalid data points
+
         protected override void OnAwake()
         {
             base.OnAwake();
@@ -58,16 +63,25 @@ namespace Tobii.Research.Unity
             base.OnStart();
             _eyeTracker = EyeTracker.Instance;
             _calibrationObject = Calibration.Instance;
+
+            if (_eyeTracker == null || _calibrationObject == null)
+            {
+                Debug.LogError("EyeTracker or Calibration object is not found.");
+                return;
+            }
+
             startButton.onClick.AddListener(OnStartButtonClick);
         }
 
         private void Update()
         {
+            if (_eyeTracker == null) return;  // Add null check
             UpdateGazeCursor();
 
             if (isRecording)
             {
                 RecordGazeData();
+                UpdateInvalidDataPercentage(); // Update the invalid data percentage in real time
             }
 
             UpdatePanelWatchTime();
@@ -80,23 +94,32 @@ namespace Tobii.Research.Unity
 
         private void LogGazePosition()
         {
-            var data = _eyeTracker.LatestGazeData;
-            Vector2 gazePointOnDisplayl = new(data.Left.GazePointOnDisplayArea.x, data.Left.GazePointOnDisplayArea.y);
-            Vector2 gazePointOnDisplayr = new(data.Right.GazePointOnDisplayArea.x, data.Right.GazePointOnDisplayArea.y);
+            if (_eyeTracker == null) return;
 
-            // Calculate the mean gaze position
+            var data = _eyeTracker.LatestGazeData;
+
+            if (!data.Left.GazePointValid && !data.Right.GazePointValid) return;
+
+            Vector2 gazePositionInPixels = GetMeanGazePositionInPixels(data);
+        }
+
+        private Vector2 GetMeanGazePositionInPixels(IGazeData data)
+        {
+            Vector2 gazePointOnDisplayl = data.Left.GazePointValid ? new Vector2(data.Left.GazePointOnDisplayArea.x, data.Left.GazePointOnDisplayArea.y) : Vector2.zero;
+            Vector2 gazePointOnDisplayr = data.Right.GazePointValid ? new Vector2(data.Right.GazePointOnDisplayArea.x, data.Right.GazePointOnDisplayArea.y) : Vector2.zero;
+
             Vector2 meanGazePointOnDisplay = new Vector2(
                 (gazePointOnDisplayl.x + gazePointOnDisplayr.x) / 2,
                 (gazePointOnDisplayl.y + gazePointOnDisplayr.y) / 2
             );
 
-            // Transform the normalized coordinates to screen pixel coordinates
-            Vector2 gazePositionInPixels = new Vector2(
+            if (!data.Left.GazePointValid) meanGazePointOnDisplay = gazePointOnDisplayr;
+            if (!data.Right.GazePointValid) meanGazePointOnDisplay = gazePointOnDisplayl;
+
+            return new Vector2(
                 meanGazePointOnDisplay.x * Screen.width,
                 (1 - meanGazePointOnDisplay.y) * Screen.height
             );
-
-            Debug.Log(gazePositionInPixels.x + "   " + gazePositionInPixels.y);
         }
 
         private void UpdateGazeCursor()
@@ -106,15 +129,7 @@ namespace Tobii.Research.Unity
             var data = _eyeTracker.LatestGazeData;
             if (data.CombinedGazeRayScreenValid)
             {
-                Vector2 gazePointOnDisplayl = new(data.Left.GazePointOnDisplayArea.x, data.Left.GazePointOnDisplayArea.y);
-                Vector2 gazePointOnDisplayr = new(data.Right.GazePointOnDisplayArea.x, data.Right.GazePointOnDisplayArea.y);
-
-                // Calculate the mean gaze position
-                Vector2 meanGazePointOnDisplay = new Vector2(
-                    (gazePointOnDisplayl.x + gazePointOnDisplayr.x) / 2,
-                    (gazePointOnDisplayl.y + gazePointOnDisplayr.y) / 2
-                );
-                Vector2 gazePosition = new(meanGazePointOnDisplay.x * Screen.width, (1 - meanGazePointOnDisplay.y) * Screen.height);
+                Vector2 gazePosition = GetMeanGazePositionInPixels(data);
                 RectTransformUtility.ScreenPointToLocalPointInRectangle(gazeCursor.canvas.transform as RectTransform, gazePosition, Camera.main, out Vector2 localPosition);
                 gazeCursor.rectTransform.anchoredPosition = localPosition;
                 gazeText.text = $"Gaze Position: ({gazePosition.x}, {gazePosition.y})";
@@ -136,79 +151,77 @@ namespace Tobii.Research.Unity
             string previousPanelNameLooked = panelNameLooked;
             panelNameLooked = "None";
 
-            switch (strategy)
+            if (strategy == 0)
             {
-                case 0: // Strategy1
-                    float panelHeight1 = Screen.height * 0.5f;
-                    float panelWidth1 = Screen.width * 0.5f;
-                    float leftBound1 = (Screen.width - panelWidth1) / 2;
-                    float rightBound1 = leftBound1 + panelWidth1;
-                    float bottomBound1 = (Screen.height - panelHeight1) / 2;
-                    float topBound1 = bottomBound1 + panelHeight1;
+                float panelHeight = Screen.height * 0.5f;
+                float panelWidth = Screen.width * 0.5f;
+                float leftBound = (Screen.width - panelWidth) / 2;
+                float rightBound = leftBound + panelWidth;
+                float bottomBound = (Screen.height - panelHeight) / 2;
+                float topBound = bottomBound + panelHeight;
 
-                    if (gazePosition.x >= leftBound1 && gazePosition.x <= rightBound1 && gazePosition.y >= bottomBound1 && gazePosition.y <= topBound1)
-                    {
-                        panelNameLooked = "FPV";
-                    }
-                    break;
-                case 1: // Strategy2
-                    float panelHeight = Screen.height * 0.5f;
-                    float panelWidth = Screen.width * 0.5f;
-                    float leftBound = (Screen.width - panelWidth) / 2;
-                    float rightBound = leftBound + panelWidth;
-
-                    if (gazePosition.x >= leftBound && gazePosition.x <= rightBound)
-                    {
-                        if (gazePosition.y > (Screen.height / 2))
-                        {
-                            panelNameLooked = "FPV";
-                        }
-                        else
-                        {
-                            panelNameLooked = "Vision_Assist";
-                        }
-                    }
-                    break;
-                case 2: // Strategy3
-                    if (gazePosition.x < Screen.width / 2)
-                    {
-                        if (gazePosition.y > Screen.height / 2)
-                        {
-                            panelNameLooked = "FPV";
-                        }
-                        else
-                        {
-                            panelNameLooked = "VIRTUAL TPV LOW QUALITY";
-                        }
-                    }
-                    else
-                    {
-                        panelNameLooked = "MAP";
-                    }
-                    break;
-                case 3: // Strategy4
-                    if (gazePosition.x < Screen.width / 2)
-                    {
-                        if (gazePosition.y > Screen.height / 2)
-                        {
-                            panelNameLooked = "FPV";
-                        }
-                        else
-                        {
-                            panelNameLooked = "VIRTUAL TPV HIGH QUALITY";
-                        }
-                    }
-                    else
-                    {
-                        panelNameLooked = "MAP";
-                    }
-                    break;
+                if (gazePosition.x >= leftBound && gazePosition.x <= rightBound && gazePosition.y >= bottomBound && gazePosition.y <= topBound)
+                {
+                    panelNameLooked = "FPV";
+                }
+            }
+            else if (strategy == 1)
+            {
+                CalculatePanelLookedForStrategy2(gazePosition);
+            }
+            else if (strategy == 2)
+            {
+                CalculatePanelLookedForStrategy3(gazePosition);
+            }
+            else if (strategy == 3)
+            {
+                CalculatePanelLookedForStrategy4(gazePosition);
             }
 
             if (panelNameLooked != previousPanelNameLooked)
             {
                 UpdatePanelWatchTime();
                 lastPanelNameLooked = panelNameLooked;
+            }
+        }
+
+        private void CalculatePanelLookedForStrategy2(Vector2 gazePosition)
+        {
+            float panelHeight = Screen.height * 0.5f;
+            float panelWidth = Screen.width * 0.5f;
+            float leftBound = (Screen.width - panelWidth) / 2;
+            float rightBound = leftBound + panelWidth;
+
+            if (gazePosition.x >= leftBound && gazePosition.x <= rightBound)
+            {
+                panelNameLooked = gazePosition.y > (Screen.height / 2) ? "FPV" : "MAP";
+            }
+        }
+
+        private void CalculatePanelLookedForStrategy3(Vector2 gazePosition)
+        {
+            if (gazePosition.x < Screen.width / 2)
+            {
+                panelNameLooked = gazePosition.y > Screen.height / 2 ? "FPV" : "TPV";
+            }
+            else
+            {
+                panelNameLooked = "MAP";
+            }
+        }
+
+        private void CalculatePanelLookedForStrategy4(Vector2 gazePosition)
+        {
+            float panelHeight = Screen.height * 0.5f;
+            float panelWidth = Screen.width * 0.5f;
+            float leftBound = (Screen.width - panelWidth) / 2;
+            float rightBound = leftBound + panelWidth;
+            float bottomBound = (Screen.height - panelHeight) / 2;
+            float topBound = bottomBound + panelHeight;
+
+            if (gazePosition.x >= leftBound && gazePosition.x <= rightBound && gazePosition.y >= bottomBound && gazePosition.y <= topBound)
+            {
+                panelNameLooked = "FPVAR";
             }
         }
 
@@ -222,13 +235,10 @@ namespace Tobii.Research.Unity
                 case "FPV":
                     fpvWatchTime += deltaTime;
                     break;
-                case "Vision_Assist":
-                    visionAssistWatchTime += deltaTime;
-                    break;
-                case "VIRTUAL TPV LOW QUALITY":
+                case "TPV":
                     virtualTpvLowQualityWatchTime += deltaTime;
                     break;
-                case "VIRTUAL TPV HIGH QUALITY":
+                case "FPVAR":
                     virtualTpvHighQualityWatchTime += deltaTime;
                     break;
                 case "MAP":
@@ -240,57 +250,94 @@ namespace Tobii.Research.Unity
 
         private void RecordGazeData()
         {
-            if (_eyeTracker == null) return;
+            if (_eyeTracker == null || gazeWriter == null) return;
 
             var data = _eyeTracker.LatestGazeData;
-            DateTime dateTime = DateTime.UtcNow;
-            string timestamp = dateTime.ToString("yyyy-MM-dd HH:mm:ss.fff");
 
-            Vector2 gazePointOnDisplayl = new(data.Left.GazePointOnDisplayArea.x, data.Left.GazePointOnDisplayArea.y);
-            Vector2 gazePointOnDisplayr = new(data.Right.GazePointOnDisplayArea.x, data.Right.GazePointOnDisplayArea.y);
-
-            // Calculate the mean gaze position
-            Vector2 meanGazePointOnDisplay = new Vector2(
-                (gazePointOnDisplayl.x + gazePointOnDisplayr.x) / 2,
-                (gazePointOnDisplayl.y + gazePointOnDisplayr.y) / 2
-            );
-
-            // Transform the normalized coordinates to screen pixel coordinates
-            Vector2 gazePositionInPixels = new Vector2(
-                meanGazePointOnDisplay.x * Screen.width,
-                (1 - meanGazePointOnDisplay.y) * Screen.height
-            );
+            totalDataPoints++;
 
             bool validLeftGaze = data.Left.GazePointValid;
             bool validRightGaze = data.Right.GazePointValid;
             bool validLeftPupil = data.Left.PupilDiameterValid;
             bool validRightPupil = data.Right.PupilDiameterValid;
+
+            if (!validLeftGaze || !validRightGaze)
+            {
+                invalidDataPoints++;
+                if (timer.IsTimerRunning())
+                {
+                    UpdateInvalidDataPercentage();
+                }
+                return;
+            }
+
+            DateTime dateTime = DateTime.UtcNow;
+            string timestamp = dateTime.ToString("yyyy-MM-dd HH:mm:ss.fff");
+
+            Vector2 gazePositionInPixels = GetMeanGazePositionInPixels(data);
+
             float leftPupilDiameter = data.Left.PupilDiameter;
             float rightPupilDiameter = data.Right.PupilDiameter;
 
-            var leftGazeOriginInTrackBox = data.Left.GazeOriginInTrackBoxCoordinates;
-            var leftGazeOriginInUser = data.Left.GazeOriginInUserCoordinates;
-            var leftGazePointInUser = data.Left.GazePointInUserCoordinates;
-            var leftGazePointOnDisplayArea = data.Left.GazePointOnDisplayArea;
-            var leftGazeRayScreen = data.Left.GazeRayScreen;
+            string leftGazeData = GetGazeDataString(data.Left);
+            string rightGazeData = GetGazeDataString(data.Right);
 
-            var rightGazeOriginInTrackBox = data.Right.GazeOriginInTrackBoxCoordinates;
-            var rightGazeOriginInUser = data.Right.GazeOriginInUserCoordinates;
-            var rightGazePointInUser = data.Right.GazePointInUserCoordinates;
-            var rightGazePointOnDisplayArea = data.Right.GazePointOnDisplayArea;
-            var rightGazeRayScreen = data.Right.GazeRayScreen;
+            Vector2 gazePointOnDisplayl = data.Left.GazePointValid ? new Vector2(data.Left.GazePointOnDisplayArea.x, data.Left.GazePointOnDisplayArea.y) : Vector2.zero;
+            Vector2 gazePointOnDisplayr = data.Right.GazePointValid ? new Vector2(data.Right.GazePointOnDisplayArea.x, data.Right.GazePointOnDisplayArea.y) : Vector2.zero;
 
-            gazeWriter.WriteLine($"{timestamp},{dateTime:yyyy-MM-dd HH:mm:ss.fff},{currentCountdown},{validLeftGaze},{validRightGaze},{meanGazePointOnDisplay.x},{meanGazePointOnDisplay.y},{gazePositionInPixels.x},{gazePositionInPixels.y},{validLeftPupil},{leftPupilDiameter},{validRightPupil},{rightPupilDiameter}," +
-                                 $"{leftGazeOriginInTrackBox.x},{leftGazeOriginInTrackBox.y},{leftGazeOriginInTrackBox.z},{leftGazeOriginInUser.x},{leftGazeOriginInUser.y},{leftGazeOriginInUser.z},{leftGazePointInUser.x},{leftGazePointInUser.y},{leftGazePointInUser.z},{leftGazePointOnDisplayArea.x},{leftGazePointOnDisplayArea.y},{leftGazeRayScreen.origin.x},{leftGazeRayScreen.origin.y},{leftGazeRayScreen.origin.z},{leftGazeRayScreen.direction.x},{leftGazeRayScreen.direction.y},{leftGazeRayScreen.direction.z}," +
-                                 $"{rightGazeOriginInTrackBox.x},{rightGazeOriginInTrackBox.y},{rightGazeOriginInTrackBox.z},{rightGazeOriginInUser.x},{rightGazeOriginInUser.y},{rightGazeOriginInUser.z},{rightGazePointInUser.x},{rightGazePointInUser.y},{rightGazePointInUser.z},{rightGazePointOnDisplayArea.x},{rightGazePointOnDisplayArea.y},{rightGazeRayScreen.origin.x},{rightGazeRayScreen.origin.y},{rightGazeRayScreen.origin.z},{rightGazeRayScreen.direction.x},{rightGazeRayScreen.direction.y},{rightGazeRayScreen.direction.z},{panelNameLooked}");
+            Vector2 meanGazePointOnDisplay = new Vector2(
+                (gazePointOnDisplayl.x + gazePointOnDisplayr.x) / 2,
+                (gazePointOnDisplayl.y + gazePointOnDisplayr.y) / 2
+            );
+
+            lock (gazeWriter)
+            {
+                gazeWriter.WriteLine($"{timestamp},{dateTime:yyyy-MM-dd HH:mm:ss.fff},{currentCountdown},{validLeftGaze},{validRightGaze},{meanGazePointOnDisplay.x},{meanGazePointOnDisplay.y},{gazePositionInPixels.x},{gazePositionInPixels.y}," +
+                                     $"{validLeftPupil},{leftPupilDiameter},{validRightPupil},{rightPupilDiameter},{leftGazeData},{rightGazeData},{panelNameLooked}");
+            }
+
+            if (timer.IsTimerRunning())
+            {
+                UpdateInvalidDataPercentage();
+            }
+        }
+
+        private string GetGazeDataString(IGazeDataEye gazeData)
+        {
+            return $"{gazeData.GazeOriginInTrackBoxCoordinates.x},{gazeData.GazeOriginInTrackBoxCoordinates.y},{gazeData.GazeOriginInTrackBoxCoordinates.z}," +
+                   $"{gazeData.GazeOriginInUserCoordinates.x},{gazeData.GazeOriginInUserCoordinates.y},{gazeData.GazeOriginInUserCoordinates.z}," +
+                   $"{gazeData.GazePointInUserCoordinates.x},{gazeData.GazePointInUserCoordinates.y},{gazeData.GazePointInUserCoordinates.z}," +
+                   $"{gazeData.GazePointOnDisplayArea.x},{gazeData.GazePointOnDisplayArea.y},{gazeData.GazeRayScreen.origin.x},{gazeData.GazeRayScreen.origin.y},{gazeData.GazeRayScreen.origin.z}," +
+                   $"{gazeData.GazeRayScreen.direction.x},{gazeData.GazeRayScreen.direction.y},{gazeData.GazeRayScreen.direction.z}";
+        }
+
+        private void UpdateInvalidDataPercentage()
+        {
+            float invalidPercentage = (totalDataPoints == 0) ? 0 : ((float)invalidDataPoints / totalDataPoints) * 100;
+            invalidDataText.text = $"{invalidPercentage:F2}% ({invalidDataPoints}/{totalDataPoints})";
         }
 
         public void StartRecording(string filePath)
         {
+            if (gazeWriter != null)
+            {
+                Debug.LogError("Gaze recording is already in progress.");
+                return;
+            }
+
             gazeWriter = new StreamWriter(filePath);
-            gazeWriter.WriteLine("Timestamp,DateTime,Countdown,ValidLeftGaze,ValidRightGaze,X,Y,XPixels,YPixels,ValidLeftPupil,LeftPupilDiameter,ValidRightPupil,RightPupilDiameter," +
-                                 "LeftGazeOriginInTrackBoxCoordinatesX,LeftGazeOriginInTrackBoxCoordinatesY,LeftGazeOriginInTrackBoxCoordinatesZ,LeftGazeOriginInUserCoordinatesX,LeftGazeOriginInUserCoordinatesY,LeftGazeOriginInUserCoordinatesZ,LeftGazePointInUserCoordinatesX,LeftGazePointInUserCoordinatesY,LeftGazePointInUserCoordinatesZ,LeftGazePointOnDisplayAreaX,LeftGazePointOnDisplayAreaY,LeftGazeRayScreenOriginX,LeftGazeRayScreenOriginY,LeftGazeRayScreenOriginZ,LeftGazeRayScreenDirectionX,LeftGazeRayScreenDirectionY,LeftGazeRayScreenDirectionZ," +
-                                 "RightGazeOriginInTrackBoxCoordinatesX,RightGazeOriginInTrackBoxCoordinatesY,RightGazeOriginInTrackBoxCoordinatesZ,RightGazeOriginInUserCoordinatesX,RightGazeOriginInUserCoordinatesY,RightGazeOriginInUserCoordinatesZ,RightGazePointInUserCoordinatesX,RightGazePointInUserCoordinatesY,RightGazePointInUserCoordinatesZ,RightGazePointOnDisplayAreaX,RightGazePointOnDisplayAreaY,RightGazeRayScreenOriginX,RightGazeRayScreenOriginY,RightGazeRayScreenOriginZ,RightGazeRayScreenDirectionX,RightGazeRayScreenDirectionY,RightGazeRayScreenDirectionZ,PanelNameLooked");
+            gazeWriter.WriteLine("Timestamp,DateTime,Countdown,ValidLeftGaze,ValidRightGaze,XPixels,YPixels,ValidLeftPupil,LeftPupilDiameter,ValidRightPupil,RightPupilDiameter," +
+                                 "LeftGazeOriginInTrackBoxCoordinatesX,LeftGazeOriginInTrackBoxCoordinatesY,LeftGazeOriginInTrackBoxCoordinatesZ," +
+                                 "LeftGazeOriginInUserCoordinatesX,LeftGazeOriginInUserCoordinatesY,LeftGazeOriginInUserCoordinatesZ," +
+                                 "LeftGazePointInUserCoordinatesX,LeftGazePointInUserCoordinatesY,LeftGazePointInUserCoordinatesZ," +
+                                 "LeftGazePointOnDisplayAreaX,LeftGazePointOnDisplayAreaY,LeftGazeRayScreenOriginX,LeftGazeRayScreenOriginY,LeftGazeRayScreenOriginZ," +
+                                 "LeftGazeRayScreenDirectionX,LeftGazeRayScreenDirectionY,LeftGazeRayScreenDirectionZ," +
+                                 "RightGazeOriginInTrackBoxCoordinatesX,RightGazeOriginInTrackBoxCoordinatesY,RightGazeOriginInTrackBoxCoordinatesZ," +
+                                 "RightGazeOriginInUserCoordinatesX,RightGazeOriginInUserCoordinatesY,RightGazeOriginInUserCoordinatesZ," +
+                                 "RightGazePointInUserCoordinatesX,RightGazePointInUserCoordinatesY,RightGazePointInUserCoordinatesZ," +
+                                 "RightGazePointOnDisplayAreaX,RightGazePointOnDisplayAreaY,RightGazeRayScreenOriginX,RightGazeRayScreenOriginY,RightGazeRayScreenOriginZ," +
+                                 "RightGazeRayScreenDirectionX,RightGazeRayScreenDirectionY,RightGazeRayScreenDirectionZ,PanelNameLooked");
+
             isRecording = true;
             lastGazeTimeUpdate = Time.time;
         }
@@ -316,6 +363,13 @@ namespace Tobii.Research.Unity
             if (string.IsNullOrEmpty(participantID))
             {
                 Debug.LogError("Participant ID is empty.");
+                return;
+            }
+
+            string invalidChars = new string(Path.GetInvalidFileNameChars());
+            if (participantID.IndexOfAny(invalidChars.ToCharArray()) >= 0)
+            {
+                Debug.LogError("Participant ID contains invalid characters.");
                 return;
             }
 

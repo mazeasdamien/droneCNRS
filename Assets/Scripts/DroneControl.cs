@@ -59,6 +59,8 @@ public class DroneControl : MonoBehaviour
     [Header("Control Sensitivity")]
     public float verticalDeadZone = 0.2f; // Define the dead zone size for vertical movement
 
+    private Timer timer; // Reference to the Timer script
+
     private void Awake()
     {
         // Singleton pattern implementation
@@ -90,59 +92,68 @@ public class DroneControl : MonoBehaviour
         dpadup?.action?.Enable();
         dpaddown?.action?.Enable();
         southbutton?.action?.Enable();
+
+        // Get the reference to the Timer script
+        timer = FindObjectOfType<Timer>();
     }
 
     private void Update()
     {
-        HandleInput();
-
-        isDroneMoving = body.velocity.magnitude > movementThreshold;
-
-        // Check if the drone is moving to update its target position and potentially record its flight path
-        if (isDroneMoving)
+        if (timer != null && timer.IsTimerRunning())
         {
-            targetPosition = transform.position; // Update target position continuously while moving
+            HandleInput();
 
-            // If the drone has moved a significant distance since the last record, update its recorded position and rotation
-            if (Vector3.Distance(transform.position, lastRecordedPosition) > distanceThreshold)
+            isDroneMoving = body.velocity.magnitude > movementThreshold;
+
+            // Check if the drone is moving to update its target position and potentially record its flight path
+            if (isDroneMoving)
             {
-                RecordPositionAndRotation();
-                lastRecordedPosition = transform.position; // Update the last recorded position
+                targetPosition = transform.position; // Update target position continuously while moving
+
+                // If the drone has moved a significant distance since the last record, update its recorded position and rotation
+                if (Vector3.Distance(transform.position, lastRecordedPosition) > distanceThreshold)
+                {
+                    RecordPositionAndRotation();
+                    lastRecordedPosition = transform.position; // Update the last recorded position
+                }
             }
-        }
 
-        // Logic for handling noise and stationary behavior remains unchanged
-        if (!isDroneMoving && Time.time >= nextNoiseTime)
-        {
-            UpdateTargetPositionWithNoise();
-            UpdateNoiseTime();
-        }
+            // Logic for handling noise and stationary behavior remains unchanged
+            if (!isDroneMoving && Time.time >= nextNoiseTime)
+            {
+                UpdateTargetPositionWithNoise();
+                UpdateNoiseTime();
+            }
 
-        if (!isDroneMoving)
-        {
-            transform.position = Vector3.SmoothDamp(transform.position, targetPosition, ref velocity, smoothTime);
-        }
+            if (!isDroneMoving)
+            {
+                transform.position = Vector3.SmoothDamp(transform.position, targetPosition, ref velocity, smoothTime);
+            }
 
-        AdjustRotation();
+            AdjustRotation();
 
-        // Update UI Element rotation to match camera X rotation
-        if (uiElement != null)
-        {
-            Vector3 newRotation = uiElement.localEulerAngles;
-            newRotation.z = cam.localEulerAngles.x;
-            uiElement.localEulerAngles = newRotation;
-        }
+            // Update UI Element rotation to match camera X rotation
+            if (uiElement != null)
+            {
+                Vector3 newRotation = uiElement.localEulerAngles;
+                newRotation.z = cam.localEulerAngles.x;
+                uiElement.localEulerAngles = newRotation;
+            }
 
-        // Log inputs if logging is enabled
-        if (isLogging)
-        {
-            LogInput();
+            // Log inputs if logging is enabled
+            if (isLogging)
+            {
+                LogInput();
+            }
         }
     }
 
     private void FixedUpdate()
     {
-        ApplyMovement();
+        if (timer != null && timer.IsTimerRunning())
+        {
+            ApplyMovement();
+        }
     }
 
     private void RecordPositionAndRotation()

@@ -1,0 +1,2 @@
+ParticipantID,StrategyUsed,EnvironmentUsed,LeftStickUsageDuration,RightStickUsageDuration,DPadUpUsageDuration,DPadDownUsageDuration,SouthButtonPressed,TotalCollisions,TotalTimeInCollision,BodyFounded,DoubleWarningPhotoAttempts,TotalSquaresVisited,FpvPanelWatchTime,VisionAssistPanelWatchTime,VirtualTpvLowQualityWatchTime,VirtualTpvHighQualityWatchTime,MapWatchTime
+00,Interface4,Environment1,18.8058,20.40407,0,0,0,1,0.9095154,0,0,13,0,0,0,27.91331,0

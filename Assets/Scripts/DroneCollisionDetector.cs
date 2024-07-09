@@ -42,7 +42,7 @@ public class DroneCollisionDetector : MonoBehaviour
                 float collisionEndTime = timerScript.GetTimeRemaining();
                 totalCollisionTime += collisionStartTime - collisionEndTime;
 
-                if (Time.time - lastCollisionTime >= 5f)
+                if (Time.time - lastCollisionTime >= 2f)
                 {
                     CollisionNumber++;
                     lastCollisionTime = Time.time;
