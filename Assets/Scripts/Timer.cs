@@ -160,7 +160,7 @@ public class Timer : MonoBehaviour
 
         string summaryFileName = GetSummaryFileName();
         summaryWriter = new StreamWriter(Path.Combine(folderPath, summaryFileName), false);
-        summaryWriter.WriteLine("ParticipantID,StrategyUsed,EnvironmentUsed,LeftStickUsageDuration,RightStickUsageDuration,DPadUpUsageDuration,DPadDownUsageDuration,SouthButtonPressed,TotalCollisions,TotalTimeInCollision,BodyFounded,DoubleWarningPhotoAttempts,TotalSquaresVisited,FpvPanelWatchTime,VisionAssistPanelWatchTime,VirtualTpvLowQualityWatchTime,VirtualTpvHighQualityWatchTime,MapWatchTime");
+        summaryWriter.WriteLine("ParticipantID,StrategyUsed,EnvironmentUsed,LeftStickUsageDuration,RightStickUsageDuration,DPadUpUsageDuration,DPadDownUsageDuration,SouthButtonPressed,TotalCollisions,TotalTimeInCollision,BodyFounded,DoubleWarningPhotoAttempts,TotalSquaresVisited,FPV,TPV,FPVAR,MAP");
     }
 
     private string GetParticipantFolderPath()
@@ -404,16 +404,15 @@ public class Timer : MonoBehaviour
 
             // Fetching panel watch times from GazeTrail
             float fpvPanelWatchTime = GazeTrail.Instance.fpvWatchTime;
-            float visionAssistPanelWatchTime = GazeTrail.Instance.visionAssistWatchTime;
-            float virtualTpvLowQualityWatchTime = GazeTrail.Instance.virtualTpvLowQualityWatchTime;
-            float virtualTpvHighQualityWatchTime = GazeTrail.Instance.virtualTpvHighQualityWatchTime;
+            float fpvarWatchTime = GazeTrail.Instance.FPVARWatchTime;
+            float tpvWatchTime = GazeTrail.Instance.tpvWatchTime;
             float mapWatchTime = GazeTrail.Instance.mapWatchTime;
 
             // Fetching collision data from DroneCollisionDetector
             float totalCollisionTime = droneCollisionDetector.totalCollisionTime;
             int totalCollisions = droneCollisionDetector.CollisionNumber;
 
-            summaryWriter.WriteLine($"{participantID},{strategyUsed},{environmentUsed},{leftStickUsageDuration},{rightStickUsageDuration},{dpadUpUsageDuration},{dpadDownUsageDuration},{southButtonPressed},{totalCollisions},{totalCollisionTime},{photographedBodies.Count},{doubleWarningPhotoAttempts},{visitedSquares.Count},{fpvPanelWatchTime},{visionAssistPanelWatchTime},{virtualTpvLowQualityWatchTime},{virtualTpvHighQualityWatchTime},{mapWatchTime}");
+            summaryWriter.WriteLine($"{participantID},{strategyUsed},{environmentUsed},{leftStickUsageDuration},{rightStickUsageDuration},{dpadUpUsageDuration},{dpadDownUsageDuration},{southButtonPressed},{totalCollisions},{totalCollisionTime},{photographedBodies.Count},{doubleWarningPhotoAttempts},{visitedSquares.Count},{fpvPanelWatchTime},{tpvWatchTime},{fpvarWatchTime},{mapWatchTime}");
             summaryWriter.Close();
             summaryWriter = null;
         }

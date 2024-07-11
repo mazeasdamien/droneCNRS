@@ -53,7 +53,6 @@ public class StrategiesManager : MonoBehaviour
     public Vector3 strategy1Position;
     public Vector3 strategy2Position;
     public Vector3 strategy3Position;
-    public Vector3 strategy4Position;
 
     private float lastPathPointTime;
     private Vector3 lastPathPosition;
@@ -250,6 +249,10 @@ public class StrategiesManager : MonoBehaviour
         if (currentStrategy == Strategy.Strategy4)
         {
             TrackDronePath();
+        }
+        else if (lineRenderer != null && lineRenderer.positionCount > 0)
+        {
+            ResetPath(); // Clear the path if the current strategy is not Strategy 4
         }
     }
 

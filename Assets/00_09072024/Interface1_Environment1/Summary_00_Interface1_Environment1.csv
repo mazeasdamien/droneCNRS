@@ -1,0 +1,2 @@
+ParticipantID,StrategyUsed,EnvironmentUsed,LeftStickUsageDuration,RightStickUsageDuration,DPadUpUsageDuration,DPadDownUsageDuration,SouthButtonPressed,TotalCollisions,TotalTimeInCollision,BodyFounded,DoubleWarningPhotoAttempts,TotalSquaresVisited,FPV,TPV,FPVAR,MAP
+00,Interface1,Environment1,5.105761,3.460847,0,0,0,0,0,0,0,3,5.952668,0,5.952668,0

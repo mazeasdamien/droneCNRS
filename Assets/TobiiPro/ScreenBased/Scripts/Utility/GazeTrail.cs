@@ -42,9 +42,8 @@ namespace Tobii.Research.Unity
 
         // Public fields to display in the inspector for panel watch times
         public float fpvWatchTime = 0f;
-        public float visionAssistWatchTime = 0f;
-        public float virtualTpvLowQualityWatchTime = 0f;
-        public float virtualTpvHighQualityWatchTime = 0f;
+        public float tpvWatchTime = 0f;
+        public float FPVARWatchTime = 0f;
         public float mapWatchTime = 0f;
 
         private float lastGazeTimeUpdate = 0f;
@@ -238,10 +237,10 @@ namespace Tobii.Research.Unity
                     fpvWatchTime += deltaTime;
                     break;
                 case "TPV":
-                    virtualTpvLowQualityWatchTime += deltaTime;
+                    tpvWatchTime += deltaTime;
                     break;
                 case "FPVAR":
-                    virtualTpvHighQualityWatchTime += deltaTime;
+                    FPVARWatchTime += deltaTime;
                     break;
                 case "MAP":
                     mapWatchTime += deltaTime;
