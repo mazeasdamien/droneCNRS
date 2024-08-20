@@ -1,2 +1,0 @@
-ParticipantID,StrategyUsed,EnvironmentUsed,LeftStickUsageDuration,RightStickUsageDuration,DPadUpUsageDuration,DPadDownUsageDuration,SouthButtonPressed,TotalCollisions,TotalTimeInCollision,BodyFounded,DoubleWarningPhotoAttempts,TotalSquaresVisited,FpvPanelWatchTime,VisionAssistPanelWatchTime,VirtualTpvLowQualityWatchTime,VirtualTpvHighQualityWatchTime,MapWatchTime
-00,Strategy 3 ,Environment 1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0
