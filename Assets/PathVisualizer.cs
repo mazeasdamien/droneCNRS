@@ -15,11 +15,20 @@ public class PathVisualizer : MonoBehaviour
     private float totalTimeInsideBuildings;
     [TextArea]
     public string allTimings; // This will display the timings for all files
+    public int totalDistinctCubesVisited;
+    public int totalRevisitedCubes;
 
     private List<Vector3> positions = new List<Vector3>();
     private List<float> timestamps = new List<float>();  // List to store timestamps from CSV as seconds
     private string participantID; // Store ParticipantID for naming
     private List<string> timingsList = new List<string>(); // List to store timings for all CSV files
+
+    private HashSet<Vector3Int> visitedCubes = new HashSet<Vector3Int>();
+    private HashSet<Vector3Int> revisitedCubes = new HashSet<Vector3Int>();
+    private Vector3Int? lastCube = null;
+
+    public Vector3 environmentSize = new Vector3(100, 30, 100); // Size of the environment
+    public Vector3 cubeSize = new Vector3(4, 4, 4); // Size of each cube
 
     void OnEnable()
     {
@@ -52,7 +61,7 @@ public class PathVisualizer : MonoBehaviour
         using (StreamWriter writer = new StreamWriter(resultFilePath))
         {
             // Write the header for the result CSV
-            writer.WriteLine("ParticipantID,InterfaceID,Environment,TimeInsideBuilding");
+            writer.WriteLine("ParticipantID,InterfaceID,Environment,TimeInsideBuilding,DistinctCubesVisited,RevisitedCubes");
 
             foreach (string csvFile in csvFiles)
             {
@@ -68,6 +77,9 @@ public class PathVisualizer : MonoBehaviour
     {
         positions.Clear();
         timestamps.Clear();
+        visitedCubes.Clear();
+        revisitedCubes.Clear();
+        lastCube = null;
 
         if (string.IsNullOrEmpty(csvFilePath))
         {
@@ -121,6 +133,12 @@ public class PathVisualizer : MonoBehaviour
                         Vector3 position = new Vector3(posX, posY, posZ);
                         positions.Add(position);
                         timestamps.Add((float)(dateTime - startTime).TotalSeconds);
+
+                        // Calculate which cube this position falls into
+                        Vector3Int cubeIndex = GetCubeIndex(position);
+
+                        // Track entry and exit for revisited logic
+                        TrackCubeVisit(cubeIndex);
                     }
                     else
                     {
@@ -133,12 +151,47 @@ public class PathVisualizer : MonoBehaviour
             totalTimeInsideBuildings = CalculateTimeInsideBuildings();
             timingsList.Add($"Participant {participantID}: {totalTimeInsideBuildings:F2} seconds inside");
 
+            totalDistinctCubesVisited = visitedCubes.Count;
+            totalRevisitedCubes = revisitedCubes.Count;
+
             WriteResultToCsv(csvFilePath, writer);
         }
         catch (System.Exception e)
         {
             Debug.LogError("Failed to load CSV: " + e.Message);
         }
+    }
+
+    Vector3Int GetCubeIndex(Vector3 position)
+    {
+        // Calculate the index of the cube the position falls into
+        int x = Mathf.FloorToInt(position.x / cubeSize.x);
+        int y = Mathf.FloorToInt(position.y / cubeSize.y);
+        int z = Mathf.FloorToInt(position.z / cubeSize.z);
+        return new Vector3Int(x, y, z);
+    }
+
+    void TrackCubeVisit(Vector3Int currentCube)
+    {
+        if (lastCube.HasValue)
+        {
+            if (lastCube != currentCube)
+            {
+                // The drone has exited the last cube and entered a new one
+                if (visitedCubes.Contains(currentCube))
+                {
+                    revisitedCubes.Add(currentCube);
+                }
+                visitedCubes.Add(currentCube);
+            }
+        }
+        else
+        {
+            // First cube visit
+            visitedCubes.Add(currentCube);
+        }
+
+        lastCube = currentCube;
     }
 
     float CalculateTimeInsideBuildings()
@@ -197,7 +250,7 @@ public class PathVisualizer : MonoBehaviour
         string interfaceID = interfaceMatch.Groups[1].Value;
 
         // Append the result to the output CSV
-        writer.WriteLine($"{participantID},{interfaceID},{environmentID},{totalTimeInsideBuildings:F2}");
+        writer.WriteLine($"{participantID},{interfaceID},{environmentID},{totalTimeInsideBuildings:F2},{totalDistinctCubesVisited},{totalRevisitedCubes}");
     }
 
     string ExtractEnvironmentIDFromDirectory(string csvFilePath)
