@@ -87,10 +87,10 @@ namespace Tobii.Research.Unity
 
             UpdatePanelWatchTime();
 
-            if (Input.GetKeyDown(KeyCode.Space))
-            {
+            //if (Input.GetKeyDown(KeyCode.Space))
+            //{
                 LogGazePosition();
-            }
+            //}
         }
 
         private void LogGazePosition()

@@ -78,6 +78,28 @@ public class Timer : MonoBehaviour
         }
 
         visitedSquaresCount = visitedSquares.Count;
+
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            GameObject nearestBody = GetNearestBody();
+            if (nearestBody != null)
+            {
+                if (!photographedBodies.Contains(nearestBody))
+                {
+                    photographedBodies.Add(nearestBody);
+                    TakeScreenshot();
+                }
+                else
+                {
+                    doubleWarningPhotoAttempts++; // Increment double warning photo attempts
+                    DisplayWarningMessage();
+                }
+            }
+            else
+            {
+                DisplayErrorMessage();
+            }
+        }
     }
 
     private void InitializeUI()
@@ -229,6 +251,7 @@ public class Timer : MonoBehaviour
     {
         if (currentSouthButtonState && !previousSouthButtonState)
         {
+
             GameObject nearestBody = GetNearestBody();
             if (nearestBody != null)
             {
