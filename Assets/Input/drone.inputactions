@@ -1,0 +1,157 @@
+{
+    "name": "drone",
+    "maps": [
+        {
+            "name": "flight",
+            "id": "b7b88562-b9c5-4e9d-a87b-03f4c1a24548",
+            "actions": [
+                {
+                    "name": "leftstick",
+                    "type": "Value",
+                    "id": "ac9949dd-40e2-4990-8e5f-7ceccdcfe6a2",
+                    "expectedControlType": "Stick",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                },
+                {
+                    "name": "rightstick",
+                    "type": "Value",
+                    "id": "6c9273bc-36fc-4846-b2db-b178888b3fb6",
+                    "expectedControlType": "Stick",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                },
+                {
+                    "name": "cameraup",
+                    "type": "Button",
+                    "id": "89224f07-34d4-4f13-a104-1cd6e2562870",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "cameradown",
+                    "type": "Button",
+                    "id": "e3975e71-5a9f-441a-9d83-f324edf95881",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "orbit",
+                    "type": "Button",
+                    "id": "eb25bd31-2f83-4a07-87a8-682e1ad5681c",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "flag",
+                    "type": "Button",
+                    "id": "cf942873-a41c-43c8-b2b2-fe67cbaf1c17",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "f46056c1-c012-49e6-a49c-610e6bf03184",
+                    "path": "<Gamepad>/leftStick",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "controller",
+                    "action": "leftstick",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "a468cd80-2249-4164-90bf-f7b3d3639296",
+                    "path": "<Gamepad>/rightStick",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "controller",
+                    "action": "rightstick",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "07fd498f-f440-42c2-8c07-62d7258201ce",
+                    "path": "<Gamepad>/dpad/up",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "cameraup",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "34848b0e-138c-4701-b50e-5d9b9da1b710",
+                    "path": "<Gamepad>/dpad/down",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "cameradown",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "020bf095-bbbb-4d95-ba02-f39823f65496",
+                    "path": "<Gamepad>/rightShoulder",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "orbit",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "5a1ca778-5faa-463e-95f7-4be133aceb26",
+                    "path": "<Gamepad>/buttonSouth",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "flag",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        }
+    ],
+    "controlSchemes": [
+        {
+            "name": "GameController",
+            "bindingGroup": "GameController",
+            "devices": [
+                {
+                    "devicePath": "<DualShockGamepad>",
+                    "isOptional": false,
+                    "isOR": false
+                }
+            ]
+        },
+        {
+            "name": "controller",
+            "bindingGroup": "controller",
+            "devices": [
+                {
+                    "devicePath": "<Gamepad>",
+                    "isOptional": false,
+                    "isOR": false
+                }
+            ]
+        }
+    ]
+}
